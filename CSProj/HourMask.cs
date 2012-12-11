@@ -169,7 +169,7 @@ namespace DYear
 
         public override System.Guid ComponentGuid { get { return new Guid("{E23F6D87-0815-4DC1-B7B6-BC28C1648B72}"); } }
 
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Param_YearMask; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_Param_YearMask; } }
 
     }
 

@@ -138,7 +138,7 @@ namespace DYear
         }
   
         public override System.Guid ComponentGuid {get { return new Guid("{1573577D-7B23-46C4-803D-594ECE47BA10}"); }}
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Param_Dhr; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_Param_Dhr; } }
 
         public override void CreateAttributes() { m_attributes = new GHParam_DHr_Attributes(this); }
 

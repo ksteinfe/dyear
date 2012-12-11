@@ -73,9 +73,9 @@ namespace DYear.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Param_Dhr {
+        internal static System.Drawing.Bitmap Icons_Param_Dhr {
             get {
-                object obj = ResourceManager.GetObject("Param_Dhr", resourceCulture);
+                object obj = ResourceManager.GetObject("Icons_Param_Dhr", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -83,9 +83,9 @@ namespace DYear.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Param_YearMask {
+        internal static System.Drawing.Bitmap Icons_Param_YearMask {
             get {
-                object obj = ResourceManager.GetObject("Param_YearMask", resourceCulture);
+                object obj = ResourceManager.GetObject("Icons_Param_YearMask", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

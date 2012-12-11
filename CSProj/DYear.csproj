@@ -66,8 +66,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\Component.png" />
-    <Content Include="Resources\Param_Dhr.png" />
-    <Content Include="Resources\Param_YearMask.png" />
+    <Content Include="Resources\Icons_Param_Dhr.png" />
+    <Content Include="Resources\Icons_Param_YearMask.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
