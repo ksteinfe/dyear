@@ -38,3 +38,17 @@ C:\Users\ksteinfe\Dropbox\_dev\_vsdev\Dyear\obj\Debug\DYear.csproj.GenerateResou
 C:\Users\ksteinfe\Dropbox\_dev\_vsdev\Dyear\obj\Debug\DYear.dll
 C:\Users\ksteinfe\Dropbox\_dev\_vsdev\Dyear\obj\Debug\DYear.pdb
 C:\Users\ksteinfe\Dropbox\_dev\_vsdev\Dyear\bin\DYear.dll.config
+C:\Git\dyear\CSProj\bin\DYear.dll.config
+C:\Git\dyear\CSProj\bin\DYear.dll
+C:\Git\dyear\CSProj\bin\DYear.pdb
+C:\Git\dyear\CSProj\bin\GH_IO.dll
+C:\Git\dyear\CSProj\bin\Grasshopper.dll
+C:\Git\dyear\CSProj\bin\RhinoCommon.dll
+C:\Git\dyear\CSProj\bin\GH_IO.xml
+C:\Git\dyear\CSProj\bin\Grasshopper.xml
+C:\Git\dyear\CSProj\bin\RhinoCommon.xml
+C:\Git\dyear\CSProj\obj\Debug\DYear.csprojResolveAssemblyReference.cache
+C:\Git\dyear\CSProj\obj\Debug\DYear.Properties.Resources.resources
+C:\Git\dyear\CSProj\obj\Debug\DYear.csproj.GenerateResource.Cache
+C:\Git\dyear\CSProj\obj\Debug\DYear.dll
+C:\Git\dyear\CSProj\obj\Debug\DYear.pdb
