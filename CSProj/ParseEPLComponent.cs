@@ -14,16 +14,15 @@ namespace DYear
 {
     public class ParseEPLComponent : GH_Component
     {
-        //http://www.grasshopper3d.com/forum/topics/can-the-solveinstance-method?commentId=2985220%3AComment%3A107325
         private int header_lines = 1;
         private string filepath = "";
-        private List<string> persistentOutputParams = new List<string>() { "headers" };
+        private List<string> persistentOutputParams = new List<string>() { "keys" };
 
         /// <summary>
         /// a dictionary of dictionaries of ints that describe the column structure of the loaded EPL data file
         /// each top-level item relates a string describing a zone_name with a lower-level dictionary that relates a column name with the index of that column in our CSV
         /// </summary>
-        private Dictionary<string, Dictionary<string, int> > zone_dict;
+        private Dictionary<string, Dictionary<string, int> > col_mapping;
 
         /// <summary>
         /// a dictionary of lists of hours
@@ -39,31 +38,20 @@ namespace DYear
             //Call the base constructor
             : base("ParseEPlus","EPL","Parses an Energy Plus Output file","DYear","Parse")
         { }
-
-
-        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
-        {
-            //pManager.Register_StringParam("EP Output File", "EPW", "The path to the CSV file to be parsed",GH_ParamAccess.item);
-        }
-
-        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
-        {
-            pManager.Register_StringParam("headers", "headers", "for testing.  you shouldn't really see this.");
-            
-            //GHParam_DHr param = new GHParam_DHr();
-            //pManager.RegisterParam(param, "Hours", "Dhr", "The hourly EPW data served up as a list of DHr objects", GH_ParamAccess.list);
-        }
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager){ }
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) { pManager.Register_StringParam("keys", "keys", "a list of all keys found in all parsed hours.  formatted as 'zonename :: key' or sometimes 'zonename :: subzone : key"); }
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             // simply passes data stored in zone_hours dict to output params
-
             if (zone_hours.Count > 0)
             {
                 // create a list of all the column headers we've found, so we can pass these to the 'headers' output 
                 List<string> zonenames = new List<string>();
-                foreach (KeyValuePair<string, List<DHr>> entry in zone_hours) {zonenames.Add(entry.Key);}
-                //DA.SetDataList(0, zonenames);
+                foreach (KeyValuePair<string, Dictionary<string, int>> entry in col_mapping)
+                {
+                    foreach (KeyValuePair<string, int> subentry in entry.Value) { zonenames.Add(entry.Key+" :: "+subentry.Key); }
+                }
 
                 // for each output param, find the proper list of zone_hours and pass it along
                 for (int n = 0; n < Params.Output.Count; n++)
@@ -80,9 +68,97 @@ namespace DYear
             }
         }
 
-        private bool DictParseFilepath()
+        private bool SetFilepath( string newfilepath)
         {
-            zone_dict = new Dictionary<string, Dictionary<string, int>>();
+            // do we  really want to do this before testing that the file exists?  if we do, and the file does not exist, at least the user can see what file was meant to be loaded.
+            this.filepath = newfilepath;
+            this.NickName = Path.GetFileNameWithoutExtension(filepath); // set nickname to the new filepath
+
+            if (!File.Exists(newfilepath)) {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Failed to set filepath.  Check that file exists: " + newfilepath);
+                return false;
+            }
+            else {
+                ClearParsedData(); // clear dictionaries
+
+                // parse current filepath and store information in col_mapping and zone_hours dictionaries
+                if (!ParseFilepath()) { return false; }
+                
+
+                // if successful, create a new output parameter for each entry in zone_hours
+                #region // THANK YOU DAVID RUTTEN
+
+                //Step 2. cache all existing parameters.
+                List<IGH_Param> existingParams = new List<IGH_Param>(Params.Output);
+
+                //Step 3. create a sync object for cleanup.
+                object sync = Params.EmitSyncObject();
+
+                //Step 4. remove all parameters manually, this is naughty, normally you'd call Params.UnregisterOutputParameter()
+                Params.Output.Clear();
+
+                //Step 5. recreate all parameters.
+                List<string> zonenames = new List<string>();
+                zonenames.AddRange(persistentOutputParams);
+                foreach (KeyValuePair<string, List<DHr>> entry in zone_hours) { zonenames.Add(entry.Key); }
+
+
+                foreach (string zonename in zonenames)
+                {
+                    IGH_Param zoneParam = null;
+
+                    //First, we need to check whether a parameter pointing at this file used to exist.
+                    //If that's the case, recycle it.
+                    foreach (IGH_Param oldParam in existingParams)
+                    {
+                        if ((oldParam.NickName.Equals(zonename, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            zoneParam = oldParam;
+                            existingParams.Remove(oldParam);
+                            break;
+                        }
+                    }
+
+                    if (zoneParam == null)
+                    {
+                        //It would seem there was no parameter for this file, create a new one.
+                        zoneParam = new GHParam_DHr();
+                        if (zonename == this.persistentOutputParams[0]) { zoneParam = new Grasshopper.Kernel.Parameters.Param_String(); }
+                        zoneParam.Name = zonename;
+                        zoneParam.NickName = zonename;
+                    }
+
+                    Params.RegisterOutputParam(zoneParam);
+                }
+
+                //Step 6. use the sync object to perform cleanup on all lost parameters.
+                Params.Sync(sync);
+
+                //Step 7. make sure everyone knows we've just been naughty.
+                Params.OnParametersChanged();
+
+                //Step 8. invoke the cleanup code.
+                VariableParameterMaintenance();
+
+                //Step 9. invoke a new solution.
+                ExpireSolution(true);
+
+                #endregion
+
+
+                this.Params.OnParametersChanged();
+                this.OnAttributesChanged();
+                ExpireSolution(true);
+                return true;
+
+                
+            }
+        }
+
+        private bool ParseFilepath()
+        {
+            if (!FilepathValid()) { return false; }
+            col_mapping = new Dictionary<string, Dictionary<string, int>>();
  
             // get a list of the column headers
             List<string> headers;
@@ -92,17 +168,50 @@ namespace DYear
             {
                 if (headers[n].Contains(":"))
                 {
-                    // register this column header in our zone_dict
-                    string zone_name = headers[n].Split(':')[0];
-                    string col_name = headers[n].Split(':')[1];
+                    // process zone name
+                    string zone_name = headers[n].Split(':')[0].Trim();
+                    zone_name = zone_name.ToLower();
 
-                    if (!zone_dict.ContainsKey(zone_name)) { zone_dict.Add(zone_name, new Dictionary<string, int>()); }
-                    zone_dict[zone_name].Add(col_name, n);
+                    // process col name
+                    string col_name = headers[n].Split(':')[1];
+                    int offset = col_name.IndexOf("[");
+                    if (offset >= 0)
+                        col_name = col_name.Substring(0, offset);
+                    col_name = col_name.Trim();
+                    col_name = col_name.ToLower();
+
+                    // register this column header in our zone_dict
+                    if (!col_mapping.ContainsKey(zone_name)) { col_mapping.Add(zone_name, new Dictionary<string, int>()); }
+                    col_mapping[zone_name].Add(col_name, n);
                 }
             }
 
+            // eplus does some stupid stuff with the way it names column headers.  let's see if we can fix that.
+            // our col_mapping dict may have some duplicate entries such as "lower_zone" and then later "lower_zone lights2"
+            // remove "lower_zone lights2", and then move all the entries in into "lower_zone"
+
+            List<string> zonenames_to_delete = new List<string>();
+            foreach (KeyValuePair<string, Dictionary<string, int>> entry in col_mapping)
+            {
+                string this_zonename = entry.Key;
+                foreach (string that_zonename in col_mapping.Keys)
+                {
+                    if (this_zonename.Contains(that_zonename) && (!this_zonename.Equals(that_zonename, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        // we've found a duplicate.  copy over all the entries, with the keys prepended by this zonename
+                        char[] charsToTrim = { '_', ' ', ':'};
+                        string prefix = this_zonename.Replace(that_zonename, "").Trim(charsToTrim);
+                        foreach (KeyValuePair<string, int> mapping in entry.Value) { col_mapping[that_zonename].Add(prefix + " : " + mapping.Key, mapping.Value); }
+                        zonenames_to_delete.Add(this_zonename);
+                        break;
+                    }
+                }
+            }
+            foreach (string key in zonenames_to_delete) { col_mapping.Remove(key); }
+
+
             zone_hours = new Dictionary<string, List<DHr>>();
-            foreach (string key in zone_dict.Keys) { zone_hours.Add(key, new List<DHr>()); } // empty list of hours for each zone
+            foreach (string key in col_mapping.Keys) { zone_hours.Add(key, new List<DHr>()); } // empty list of hours for each zone
 
             StreamReader reader = new StreamReader(filepath);
             string line;
@@ -113,7 +222,7 @@ namespace DYear
                 {
                     string[] linedata = line.Split(',');
 
-                    foreach (KeyValuePair<string, Dictionary<string, int>> column_dict in zone_dict)
+                    foreach (KeyValuePair<string, Dictionary<string, int>> column_dict in col_mapping)
                     {
                         DHr hr = new DHr(lnum - header_lines);
                         try
@@ -125,7 +234,7 @@ namespace DYear
                         }
                         catch
                         {
-                            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "parse error on line " + lnum);
+                            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "parse error on line " + lnum);
                             return false;
                         }
                         zone_hours[column_dict.Key].Add(hr);
@@ -136,9 +245,9 @@ namespace DYear
             return true;
         }
 
-        private void DictClear()
+        private void ClearParsedData()
         {
-            zone_dict = new Dictionary<string, Dictionary<string, int>>();
+            col_mapping = new Dictionary<string, Dictionary<string, int>>();
             zone_hours = new Dictionary<string, List<DHr>>();
         }
 
@@ -159,11 +268,20 @@ namespace DYear
             return true;
         }
 
-        public override void AddedToDocument(GH_Document document)
-        {
-            Menu_SetFilepathClicked(new object(), new EventArgs());
-        }
+        //public override void AddedToDocument(GH_Document document){ Menu_SetFilepathClicked(new object(), new EventArgs());}
 
+        public override bool Write(GH_IO.Serialization.GH_IWriter writer)
+        {
+            writer.SetString("filepath", this.filepath);
+            return base.Write(writer);
+        }
+        public override bool Read(GH_IO.Serialization.GH_IReader reader)
+        {
+            string newfilepath = "";
+            reader.TryGetString("filepath", ref newfilepath);
+            SetFilepath(newfilepath); 
+            return base.Read(reader);
+        }
 
         private void Menu_SetFilepathClicked(Object sender, EventArgs e)
         {
@@ -178,102 +296,20 @@ namespace DYear
 
             if ((fpDialog.ShowDialog() == DialogResult.OK) && (File.Exists(fpDialog.FileName)))
             {
-                filepath = fpDialog.FileName;
-                this.NickName = Path.GetFileNameWithoutExtension(filepath);
-                Menu_RefreshFilepathClicked(sender, e);
+                string newfilepath = fpDialog.FileName;
+                SetFilepath(newfilepath);
             }
 
         }
-        private void Menu_RefreshFilepathClicked(Object sender, EventArgs e)
-        {
-            DictClear(); // clear dictionaries
+        private void Menu_RefreshFilepathClicked(Object sender, EventArgs e)  {  SetFilepath(this.filepath);   }
 
-            // parse current filepath
-            if (DictParseFilepath())
-            {
-                // if successful, create a new output parameter for each entry in zone_hours
-                GHParam_DHr param = new GHParam_DHr();
-                this.Params.RegisterOutputParam(param);
-            }
-
-            #region // THANK YOU DAVID RUTTEN
-
-            //Step 2. cache all existing parameters.
-            List<IGH_Param> existingParams = new List<IGH_Param>(Params.Output);
-
-            //Step 3. create a sync object for cleanup.
-            object sync = Params.EmitSyncObject();
-
-            //Step 4. remove all parameters manually, this is naughty, normally you'd call Params.UnregisterOutputParameter()
-            Params.Output.Clear();
-
-            //Step 5. recreate all parameters.
-            List<string> zonenames = new List<string>();
-            zonenames.AddRange(persistentOutputParams);
-            foreach (KeyValuePair<string, List<DHr>> entry in zone_hours) { zonenames.Add(entry.Key); }
-
-
-            foreach (string zonename in zonenames)
-            {
-                IGH_Param zoneParam = null;
-
-                //First, we need to check whether a parameter pointing at this file used to exist.
-                //If that's the case, recycle it.
-                foreach (IGH_Param oldParam in existingParams)
-                {
-                    if ((oldParam.NickName.Equals(zonename, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        zoneParam = oldParam;
-                        existingParams.Remove(oldParam);
-                        break;
-                    }
-                }
-
-                if (zoneParam == null)
-                {
-                    //It would seem there was no parameter for this file, create a new one.
-                    zoneParam = new GHParam_DHr();
-                    if (zonename == this.persistentOutputParams[0]) { zoneParam = new Grasshopper.Kernel.Parameters.Param_String(); }
-                    zoneParam.Name = zonename;
-                    zoneParam.NickName = zonename;
-                }
-
-                Params.RegisterOutputParam(zoneParam);
-            }
-
-            //Step 6. use the sync object to perform cleanup on all lost parameters.
-            Params.Sync(sync);
-
-            //Step 7. make sure everyone knows we've just been naughty.
-            Params.OnParametersChanged();
-
-            //Step 8. invoke the cleanup code.
-            VariableParameterMaintenance();
-
-            //Step 9. invoke a new solution.
-            ExpireSolution(true);
-
-            #endregion
-
-
-            this.Params.OnParametersChanged();
-            this.OnAttributesChanged();
-            ExpireSolution(true);
-        }
         private void Menu_FilepathClicked(Object sender, EventArgs e) { System.Diagnostics.Process.Start("explorer.exe", @"/select, " + this.filepath); }
         
         public override Guid ComponentGuid { get { return new Guid("{ECA812CB-6007-41B5-90EA-A3E19F5CD9AF}"); } }
 
         protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
 
-        public void VariableParameterMaintenance()
-        {
-            //We'll add some logic here where we'll make all output parameter nicknamed unmutable.
-            foreach (IGH_Param param in Params.Output)
-            {
-                param.MutableNickName = false;
-            }
-        }
+        public void VariableParameterMaintenance() { foreach (IGH_Param param in Params.Output) { param.MutableNickName = false;} }
 
     }
 }
