@@ -64,6 +64,31 @@ namespace DYear
                         string[] cols = line.Split(',');
                         try
                         {
+                            hr.put("et_rad_horz", float.Parse(cols[10]));
+                            hr.put("et_rad_norm", float.Parse(cols[11]));
+                            hr.put("global_horz_irrad", float.Parse(cols[13]));
+                            hr.put("direct_norm_irrad", float.Parse(cols[14]));
+                            hr.put("diffuse_horz_irrad", float.Parse(cols[15]));
+                            hr.put("global_horz_illum", float.Parse(cols[16]));
+                            hr.put("direct_norm_illum", float.Parse(cols[17]));
+                            hr.put("diffuse_horz_illum", float.Parse(cols[18]));
+                            hr.put("zenith_luminance", float.Parse(cols[19]));
+                            hr.put("total_sky_cvr", float.Parse(cols[22]));
+                            hr.put("opaque_sky_cvr", float.Parse(cols[23]));
+                            hr.put("dry_bulb_temp", float.Parse(cols[6]));
+                            hr.put("dew_point_temp", float.Parse(cols[7]));
+                            hr.put("relative_humidity", float.Parse(cols[8]));
+                            hr.put("pressure", float.Parse(cols[9]));
+                            hr.put("wind_dir", float.Parse(cols[20]));
+                            hr.put("wind_speed", float.Parse(cols[21]));
+                            hr.put("horz_visibility", float.Parse(cols[24]));
+                            hr.put("ceiling_height", float.Parse(cols[25]));
+                            hr.put("precipt_water", float.Parse(cols[28]));
+                            hr.put("aerosol_depth", float.Parse(cols[29]));
+                            hr.put("snow_depth", float.Parse(cols[30]));
+                            hr.put("days_since_snow", float.Parse(cols[31]));
+
+                            /*
                             hr.put("EtRadHorz", float.Parse(cols[10]));
                             hr.put("EtRadNorm", float.Parse(cols[11]));
                             hr.put("GblHorzIrad", float.Parse(cols[13]));
@@ -87,6 +112,7 @@ namespace DYear
                             hr.put("AeroDepth", float.Parse(cols[29]));
                             hr.put("SnowDepth", float.Parse(cols[30]));
                             hr.put("DaysSinceSnow", float.Parse(cols[31]));
+                             */
                         }
                         catch
                         {
@@ -121,13 +147,13 @@ namespace DYear
                 foreach (DHr hr in shours)
                 {
                     Vector2d sunpos = SunPosition.CalculateSunPosition(hr.dt,coords.X,coords.Y);
-                    hr.put("SolarAltitude", (float)(sunpos.X));
-                    hr.put("SolarAzimuth", (float)(sunpos.Y));
-                    if (sunpos.X >=0) { hr.put("SunIsUp", 1); } else { hr.put("SunIsUp", 0); }
+                    hr.put("solar_altitude", (float)(sunpos.X));
+                    hr.put("solar_azimuth", (float)(sunpos.Y));
+                    if (sunpos.X >= 0) { hr.put("sun_is_up", 1); } else { hr.put("sun_is_up", 0); }
                 }
 
                 // fore ach hour, calculate absolute humidty and append to dictionary
-                foreach (DHr hr in shours){ hr.put("AbsHumid", Util.dbrh_to_ah(hr.val("DryBulbTemp"), hr.val("RelHumid")));}
+                foreach (DHr hr in shours) { hr.put("absolute_humidity", Util.dbrh_to_ah(hr.val("dry_bulb_temp"), hr.val("relative_humidity"))); }
 
                 DA.SetData(0, sname);
                 DA.SetData(1, swmo);

@@ -209,6 +209,8 @@ namespace DYear
                     this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "An hour in this collection contains the unique key '"  + key + "'.");
                 }
             }
+            commonKeys.Sort();
+            orphanedKeys.Sort();
         }
 
         public override void AppendAdditionalMenuItems(ToolStripDropDown menu)
