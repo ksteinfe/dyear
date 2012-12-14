@@ -50,6 +50,24 @@ namespace DYear
             get { return new List<string>(m_vals.Keys).ToArray(); } 
         }
 
+        public static string[] commonkeys(MDHr[] hours)
+        {
+            List<string> allKeys = new List<string>();
+            foreach (MDHr hr in hours) { foreach (string key in hr.keys) { if (!allKeys.Contains(key)) { allKeys.Add(key); } }}
+            List<string> cmnKeys = new List<string>();
+            foreach (string key in allKeys)
+            {
+                bool isCommon = true;
+                foreach (MDHr hr in hours)
+                {
+                    if (!hr.m_vals.ContainsKey(key)) { isCommon = false; break; }
+                }
+                if (isCommon) { cmnKeys.Add(key); }
+            }
+            return cmnKeys.ToArray();
+        }
+
+
     }
 
     public class DHr : GH_Goo<MDHr> , IComparable<DHr>
@@ -86,10 +104,22 @@ namespace DYear
 
         public float val(string key) {return Value.m_vals[key];}
         public void put(string key, float val) {Value.m_vals[key] = val;}
+        public void put_plus(string key, float val) { Value.m_vals[key] = Value.m_vals[key]+val; }
+        public void put_mult(string key, float val) { Value.m_vals[key] = Value.m_vals[key]*val; }
+        public void put_div(string key, float val) { Value.m_vals[key] = Value.m_vals[key] / val; }
+
         public string[] keys
         {
             get { return Value.keys; }
         }
+
+        public static string[] commonkeys(DHr[] hours)
+        {
+            List<MDHr> mhours = new List<MDHr>();
+            foreach(DHr hour in hours){mhours.Add(hour.Value);}
+            return MDHr.commonkeys(mhours.ToArray());
+        }
+
         #endregion 
 
         #region // GH STUFF
@@ -98,7 +128,8 @@ namespace DYear
         {
             get
             {
-                return Value.m_hr >= 0;
+                return true;
+                // return Value.m_hr >= 0; // used to test if an hour has an "hour of year" set.  some may not now.
             }
         }
         public override object ScriptVariable()

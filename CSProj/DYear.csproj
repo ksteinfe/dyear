@@ -48,15 +48,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\..\ksteinfe\Desktop\ParseEPLComponent.cs">
-      <Link>ParseEPLComponent.cs</Link>
-    </Compile>
+    <Compile Include="DHr.cs" />
     <Compile Include="HourInfo.cs" />
+    <Compile Include="ParseEPLComponent.cs" />
     <Compile Include="SunPosition.cs" />
     <Compile Include="HourMask.cs" />
-    <Compile Include="..\..\..\ksteinfe\Desktop\DHr.cs">
-      <Link>DHr.cs</Link>
-    </Compile>
     <Compile Include="DEvent.cs" />
     <Compile Include="ParseEPWComponent.cs" />
     <Compile Include="DHr Util Components.cs" />

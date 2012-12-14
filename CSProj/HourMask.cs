@@ -70,6 +70,31 @@ namespace DYear
             }
         }
 
+        public void maskByDayOfYear(int firstDay, int lastDay)
+        {
+            // produces a mask by first and last days (0-364)
+            // produces a 365 value mask corresponding to days of year to be applied to each hour of every day
+            // inclusive of first and last days
+            this.Value = new List<bool> { };
+            for (int d = 0; d < 365; d++) {
+                if ((d >= firstDay) && (d <= lastDay)) { this.Value.Add(true); } else { this.Value.Add(false); } 
+            }
+        }
+
+        public void maskByMonthOfYear(int month)
+        {
+            // produces a mask by selecting a month (0-11)
+            // produces a 365 value mask corresponding to days of year to be applied to each hour of every day
+            if (month < 11) { this.maskByDate(new DateTime(MDHr.defaultYear, month + 1, 1), new DateTime(MDHr.defaultYear, month + 2, 1).Subtract(new TimeSpan(1, 0, 0, 0))); }
+            else { this.maskByDate(new DateTime(MDHr.defaultYear, month + 1, 1), new DateTime(MDHr.defaultYear + 1, 1, 1).Subtract(new TimeSpan(1, 0, 0, 0))); }
+        }
+
+        public void fillMask(bool b)
+        {
+            this.Value = new List<bool> { };
+            for (int h = 0; h < 24; h++) this.Value.Add(b);
+        }
+
         public bool eval(DHr dhr)
         {
             switch (this.type)

@@ -174,7 +174,7 @@ namespace DYear
 
                     // process col name
                     string col_name = headers[n].Split(':')[1];
-                    int offset = col_name.IndexOf("[");
+                    int offset = col_name.IndexOf("(");
                     if (offset >= 0)
                         col_name = col_name.Substring(0, offset);
                     col_name = col_name.Trim();
