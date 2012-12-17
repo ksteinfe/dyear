@@ -40,9 +40,9 @@ namespace DYear
         public void maskByTime(DateTime da, DateTime db)
         {
             // produces a 24 value mask corresponding to hours of day to be applied to each day of the year
-            DateTime d0 = new DateTime(MDHr.defaultYear, 1, 1, 0, 0, 0).AddHours(da.Hour);
-            DateTime d1 = new DateTime(MDHr.defaultYear, 1, 1, 0, 0, 0).AddHours(db.Hour);
-
+            DateTime d0 = new DateTime(Util.defaultYear, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddHours(da.Hour);
+            DateTime d1 = new DateTime(Util.defaultYear, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddHours(db.Hour);
+            
             this.Value = new List<bool> { };
             if (d1 > d0)
             {
@@ -57,8 +57,8 @@ namespace DYear
         public void maskByDate(DateTime da, DateTime db)
         {
             // produces a 365 value mask corresponding to days of year to be applied to each hour of every day
-            DateTime d0 = new DateTime(MDHr.defaultYear, da.Month, da.Day, 0, 0, 0);
-            DateTime d1 = new DateTime(MDHr.defaultYear, db.Month, db.Day, 0, 0, 0); 
+            DateTime d0 = new DateTime(Util.defaultYear, da.Month, da.Day, 0, 0, 0, DateTimeKind.Utc);
+            DateTime d1 = new DateTime(Util.defaultYear, db.Month, db.Day, 0, 0, 0, DateTimeKind.Utc);
             this.Value = new List<bool> { };
             if (d1 > d0)
             {
@@ -85,8 +85,24 @@ namespace DYear
         {
             // produces a mask by selecting a month (0-11)
             // produces a 365 value mask corresponding to days of year to be applied to each hour of every day
-            if (month < 11) { this.maskByDate(new DateTime(MDHr.defaultYear, month + 1, 1), new DateTime(MDHr.defaultYear, month + 2, 1).Subtract(new TimeSpan(1, 0, 0, 0))); }
-            else { this.maskByDate(new DateTime(MDHr.defaultYear, month + 1, 1), new DateTime(MDHr.defaultYear + 1, 1, 1).Subtract(new TimeSpan(1, 0, 0, 0))); }
+            if (month < 11) { this.maskByDate(new DateTime(Util.defaultYear, month + 1, 1), new DateTime(Util.defaultYear, month + 2, 1).Subtract(new TimeSpan(1, 0, 0, 0))); }
+            else { this.maskByDate(new DateTime(Util.defaultYear, month + 1, 1), new DateTime(Util.defaultYear + 1, 1, 1).Subtract(new TimeSpan(1, 0, 0, 0))); }
+        }
+
+        public void maskByMonthAndHour(int month, int hour)
+        {
+            // produces a mask by selecting a month (0-11) and a time of day (0-23)
+            // produces a 8760 value mask corresponding to days of year to be applied to each hour of every day
+            // only hours falling within the selected month and occuring on the selected hour of day will pass
+
+            bool[] flags = new bool[8760];
+            for (int h = 0; h < 8760; h++)
+            {
+                flags[h] = false;
+                DateTime dt = Util.datetimeFromHourOfYear(h);
+                if ((dt.Month-1 == month)&&(dt.Hour==hour)){flags[h]=true;}
+            }
+            this.maskPerHour(flags);
         }
 
         public void fillMask(bool b)
@@ -160,8 +176,8 @@ namespace DYear
                 {
                     string[] delimiters = new string[] {" TO "};
                     string[] sstr = str.Split(delimiters,StringSplitOptions.None); 
-                    DateTime dt0 = new DateTime();
-                    DateTime dt1 = new DateTime();
+                    DateTime dt0 = Util.baseDatetime();
+                    DateTime dt1 = Util.baseDatetime();
                     if ((DateTime.TryParse(sstr[0],out dt0))&&(DateTime.TryParse(sstr[1],out dt1))){
 
                         if ((dt0.Hour == 0) && (dt1.Hour == 0)) { maskByDate(dt0, dt1); }

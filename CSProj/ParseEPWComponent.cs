@@ -146,7 +146,9 @@ namespace DYear
                 // for each hour, calculate solar positon and append to dictionary
                 foreach (DHr hr in shours)
                 {
-                    Vector2d sunpos = SunPosition.CalculateSunPosition(hr.dt,coords.X,coords.Y);
+                    //TODO: check that i added timezone properly
+                    DateTime dt = hr.dt.AddHours(-stmz);
+                    Vector2d sunpos = SunPosition.CalculateSunPosition(dt,coords.X,coords.Y);
                     hr.put("solar_altitude", (float)(sunpos.X));
                     hr.put("solar_azimuth", (float)(sunpos.Y));
                     if (sunpos.X >= 0) { hr.put("sun_is_up", 1); } else { hr.put("sun_is_up", 0); }

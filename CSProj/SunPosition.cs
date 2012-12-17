@@ -31,7 +31,7 @@ namespace DYear
             DateTime dateTime, double latitude, double longitude)
         {
             // Convert to UTC
-            dateTime = dateTime.ToUniversalTime();
+            //dateTime = dateTime.ToUniversalTime();
 
             // Number of days from J2000.0.
             double julianDate = 367 * dateTime.Year -

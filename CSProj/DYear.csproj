@@ -53,7 +53,6 @@
     <Compile Include="ParseEPLComponent.cs" />
     <Compile Include="SunPosition.cs" />
     <Compile Include="HourMask.cs" />
-    <Compile Include="DEvent.cs" />
     <Compile Include="ParseEPWComponent.cs" />
     <Compile Include="DHr Util Components.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

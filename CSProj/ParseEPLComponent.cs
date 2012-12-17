@@ -162,7 +162,7 @@ namespace DYear
  
             // get a list of the column headers
             List<string> headers;
-            using (StreamReader headreader = new StreamReader(filepath)) { headers = new List<string>(headreader.ReadLine().Split(',')); }
+            using (StreamReader headreader = new StreamReader(new FileStream(filepath,FileMode.Open,FileAccess.Read,FileShare.ReadWrite))) { headers = new List<string>(headreader.ReadLine().Split(',')); }
 
             for (int n = 0; n < headers.Count; n++)
             {
@@ -186,6 +186,7 @@ namespace DYear
                 }
             }
 
+            #region //CLEAN COLUMN HEADERS
             // eplus does some stupid stuff with the way it names column headers.  let's see if we can fix that.
             // our col_mapping dict may have some duplicate entries such as "lower_zone" and then later "lower_zone lights2"
             // remove "lower_zone lights2", and then move all the entries in into "lower_zone"
@@ -208,36 +209,57 @@ namespace DYear
                 }
             }
             foreach (string key in zonenames_to_delete) { col_mapping.Remove(key); }
+            #endregion
 
 
             zone_hours = new Dictionary<string, List<DHr>>();
             foreach (string key in col_mapping.Keys) { zone_hours.Add(key, new List<DHr>()); } // empty list of hours for each zone
 
-            StreamReader reader = new StreamReader(filepath);
+            StreamReader reader = new StreamReader(new FileStream(filepath,FileMode.Open,FileAccess.Read,FileShare.ReadWrite));
             string line;
             int lnum = 0;
+            bool sizing_complete = false;
             while ((line = reader.ReadLine()) != null)
             {
                 if (lnum >= header_lines)
                 {
                     string[] linedata = line.Split(',');
 
-                    foreach (KeyValuePair<string, Dictionary<string, int>> column_dict in col_mapping)
+
+                    DateTime dt = Util.baseDatetime();
+                    string[] dt_strings = linedata[0].Trim().Split(new char[] {' '},StringSplitOptions.RemoveEmptyEntries);
+                    if (!DateTime.TryParse(dt_strings[0] + "/" + Util.defaultYear, out dt)) // we're adding the default year here
                     {
-                        DHr hr = new DHr(lnum - header_lines);
-                        try
+                        AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "could not parse datetime on line " + lnum);
+                        return false; 
+                    }
+                    int h = 0;
+                    if (Int32.TryParse(dt_strings[1].Split(':')[0],out h)){dt = dt.AddHours(h);} else {
+                        AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "could not parse datetime on line " + lnum);
+                        return false; 
+                    }
+                    int hourOfYear = Util.hourOfYearFromDatetime(dt);
+                    if ((hourOfYear > 8759) || (hourOfYear < 0)) { AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Found an odd-looking datetime on line " + lnum); }
+                    if ((!sizing_complete) && (hourOfYear == 0)) { sizing_complete = true; }  // check if the two-day sizing period is done with
+                    if (sizing_complete)
+                    {
+                        foreach (KeyValuePair<string, Dictionary<string, int>> column_dict in col_mapping)
                         {
-                            foreach (KeyValuePair<string, int> column in column_dict.Value)
+                            DHr hr = new DHr(hourOfYear);
+                            try
                             {
-                                hr.put(column.Key, float.Parse(linedata[column.Value]));
+                                foreach (KeyValuePair<string, int> column in column_dict.Value)
+                                {
+                                    hr.put(column.Key, float.Parse(linedata[column.Value]));
+                                }
                             }
+                            catch
+                            {
+                                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "parse error on line " + lnum);
+                                return false;
+                            }
+                            zone_hours[column_dict.Key].Add(hr);
                         }
-                        catch
-                        {
-                            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "parse error on line " + lnum);
-                            return false;
-                        }
-                        zone_hours[column_dict.Key].Add(hr);
                     }
                 }
                 lnum++;

@@ -15,7 +15,6 @@ namespace DYear
     {
         internal Dictionary<string, float> m_vals;
         internal int m_hr; //hour of year
-        public static int defaultYear = 2013;
         public Point3d pos;
         public Color color;
 
@@ -42,8 +41,8 @@ namespace DYear
         }
         public DateTime dt
         {
-            get{return  new DateTime(MDHr.defaultYear, 1, 1, 0, 0, 0).AddHours(this.m_hr);}
-            set {this.m_hr = (int)(((value.DayOfYear - 1) * 24) + value.Hour); }
+            get { return Util.datetimeFromHourOfYear(this.m_hr); }
+            set { this.m_hr = Util.hourOfYearFromDatetime(value); }
         }
 
         public string[] keys {
@@ -113,6 +112,10 @@ namespace DYear
             get { return Value.keys; }
         }
 
+        public bool containsKey(string key){return Value.m_vals.ContainsKey(key);}
+
+        public void clear(){this.Value.m_vals.Clear();}
+
         public static string[] commonkeys(DHr[] hours)
         {
             List<MDHr> mhours = new List<MDHr>();
@@ -128,8 +131,9 @@ namespace DYear
         {
             get
             {
-                return true;
-                // return Value.m_hr >= 0; // used to test if an hour has an "hour of year" set.  some may not now.
+                // hour is set to -1 if hour unset.  this may occur when producing "stand-in" hours for averaging or whatever.
+                // hour is set to -999 when an error occurs
+                return ((Value.m_hr >= -1)&&(Value.m_hr <= 8760)); 
             }
         }
         public override object ScriptVariable()

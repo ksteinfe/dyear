@@ -19,22 +19,37 @@ namespace DYear
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.Register_StringParam("Value Key", "Key", "The name of the value to extract", GH_ParamAccess.item);
-            pManager.RegisterParam(new GHParam_DHr(), "DHour", "Dhr", "The Dhour from which to extract a value", GH_ParamAccess.item);
+            pManager.RegisterParam(new GHParam_DHr(), "DHour", "Dhr", "The Dhour from which to extract a value", GH_ParamAccess.list);
             
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.Register_DoubleParam("Value", "Val", "The extracted value", GH_ParamAccess.item);
+            pManager.Register_DoubleParam("Value", "Val", "The extracted value", GH_ParamAccess.list);
+            pManager.Register_IntervalParam("Range", "Rng", "An interval that describes the range of values found in the given list of Dhours", GH_ParamAccess.list);
+            
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            DHr dhr = new DHr();
+            List<DHr> dhrs = new List<DHr>();
             string key = "";
-            if ((DA.GetData(0, ref key))&&(DA.GetData(1, ref dhr))) //if it works...
+            if ((DA.GetData(0, ref key))&&(DA.GetDataList(1, dhrs))) //if it works...
             {
-                DA.SetData(0, dhr.val(key));
+                List<float> vals = new List<float>();
+                float max = dhrs[0].val(key);
+                float min = dhrs[0].val(key);
+                foreach (DHr hr in dhrs)
+                {
+                    float val = hr.val(key);
+                    vals.Add(val);
+                    if (val > max) max = val;
+                    if (val < min) min = val;
+                }
+
+                DA.SetDataList(0, vals);
+
+                DA.SetData(1, new Interval(min, max));
             }
         }
 
@@ -42,7 +57,6 @@ namespace DYear
         protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
 
     }
-
 
     public class Dhr_GetKeysComponent : GH_Component
     {
@@ -98,6 +112,165 @@ namespace DYear
         }
         public override Guid ComponentGuid { get { return new Guid("{4093D0D1-6533-4196-80E1-FDD4FC880995}"); } }
         protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
+    }
+
+    public class Dhr_LimitKeysComponent : GH_Component
+    {
+        public Dhr_LimitKeysComponent()
+            //Call the base constructor
+            : base("Limit Keys", "LimitKeys", "Removes unwanted keys from a Dhour or list of Dhours", "DYear", "Manipulate")
+        { }
+
+
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
+        {
+            pManager.Register_StringParam("Keys to Keep", "Keys", "The keys that should remain in the given Dhour", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "DHour", "Dhr", "The given Dhour", GH_ParamAccess.item);
+        }
+
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
+        {
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHour", "Dhr", "The resulting Dhour", GH_ParamAccess.item);
+        }
+
+        protected override void SolveInstance(IGH_DataAccess DA)
+        {
+            DHr hrIn = new DHr();
+            if (DA.GetData(1, ref hrIn))
+            {
+                DHr hrOut = new DHr(hrIn);
+                hrOut.clear();
+                List<string> keys_to_keep = new List<string>();
+                DA.GetDataList(0, keys_to_keep);
+                foreach (string key in keys_to_keep)
+                {
+                    if (hrIn.containsKey(key)) hrOut.put(key, hrIn.val(key));
+                    else this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "key not found in given hour: "+key+"\nIf you are streaming from a panel component did you remember to uncheck the 'multiline data' option?");
+                }
+                DA.SetData(0, hrOut);
+            }
+        }
+        public override Guid ComponentGuid { get { return new Guid("{DE92A87D-73F0-46E4-AC6A-D4934587F2AF}"); } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
+    }
+
+    public class Dhr_MergeHoursComponent : GH_Component , IGH_VariableParameterComponent
+    {
+        public Dhr_MergeHoursComponent()
+            //Call the base constructor
+            : base("Merge Hours", "MergeHours", "Merges two streams of Dhours.\nLooks for matching pairs of Dhours (those sharing an index) from each stream.\nWhen a pair is found, their keys are merged.\nAll keys are appended with the nickname of the input stream.\nAll non-keyed properties (position, color, etc) of DHours are not included in results.\nNaming an input 'none' will supress key renaming.", "DYear", "Manipulate")
+        {
+            index_of_new_param = -1;
+            total_params_added = -1;
+        }
+
+
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
+        {
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "A", "The first set of Dhours", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "B", "The second set of Dhours", GH_ParamAccess.list);
+        }
+
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
+        {
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The merged Dhours", GH_ParamAccess.list);
+        }
+
+        protected override void SolveInstance(IGH_DataAccess DA)
+        {
+
+            Dictionary<string, List<DHr>> input_dict = new Dictionary<string, List<DHr>>();
+            for (int i = 0; i < Params.Input.Count; i++)
+            {
+                List<DHr> hrs = new List<DHr>();
+                if (DA.GetDataList(i, hrs)) { input_dict.Add(Params.Input[i].NickName.ToLowerInvariant().Trim(), hrs); }
+            }
+
+            if (input_dict.Count >= 2)
+            {
+                List<int> hour_indices = new List<int>(); // holds the combined list of hours represented in all lists
+                Dictionary<string, List<DHr>> clean_dict = new Dictionary<string, List<DHr>>();
+                #region Clean and Sort Incoming Hours
+                foreach (KeyValuePair<string, List<DHr>> entry in input_dict)
+                {
+                    List<int> dups = new List<int>();
+                    List<DHr> temp = new List<DHr>();
+                    foreach (DHr hr in entry.Value)
+                    {
+                        if (!dups.Contains(hr.hr)) { temp.Add(hr); dups.Add(hr.hr); }
+                        else { this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Found a duplicate hour in second list of hours at index " + hr.hr + "\nPlease clean up your hourstreams before merging"); }
+                        if (!hour_indices.Contains(hr.hr)) { hour_indices.Add(hr.hr); }
+                    }
+
+                    clean_dict.Add(entry.Key, temp);
+                }
+                #endregion
+
+                List<DHr> hrsOut = new List<DHr>();
+                foreach (int i in hour_indices)
+                {
+                    DHr hrOut = new DHr(i);
+                    foreach (KeyValuePair<string, List<DHr>> entry in clean_dict)
+                    {
+                        foreach (DHr hr in entry.Value) foreach (string key in hr.keys)
+                            {
+                                if (entry.Key == "none") hrOut.put(key, hr.val(key));
+                                else hrOut.put((key + " :: " + entry.Key).ToLowerInvariant().Trim(), hr.val(key));
+                            }
+                    }
+                    hrsOut.Add(hrOut);
+                }
+                DA.SetDataList(0, hrsOut);
+            }
+        }
+        public override Guid ComponentGuid { get { return new Guid("{5EC55608-99F1-4CEF-8D28-819EB7EFCD62}"); } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
+
+        #region Variable Param Stuff
+
+        private int index_of_new_param;
+        private int total_params_added;
+        int max_params = 7;
+        int min_params = 2;
+        char[] alpha = "CDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
+
+        public bool CanInsertParameter(GH_ParameterSide side, int index)
+        {
+            if (index < min_params) return false;
+            if ((side == GH_ParameterSide.Input) && (this.Params.Input.Count < max_params)) return true;
+            return false;
+        }
+
+        public bool CanRemoveParameter(GH_ParameterSide side, int index)
+        {
+            if (index < min_params) return false;
+            if ((side == GH_ParameterSide.Input) && (this.Params.Input.Count > min_params)) return true;
+            return false;
+        }
+
+        public IGH_Param CreateParameter(GH_ParameterSide side, int index) {
+            index_of_new_param = index;
+            total_params_added++;
+            if (total_params_added >= alpha.Length) total_params_added = 0;
+            return new GHParam_DHr();  
+       }
+
+        public bool DestroyParameter(GH_ParameterSide side, int index) { return true; }
+
+        public void VariableParameterMaintenance()
+        {
+            if (index_of_new_param >= 0)
+            {
+                Params.Input[index_of_new_param].NickName = alpha[total_params_added].ToString();
+                Params.Input[index_of_new_param].Access = GH_ParamAccess.list;
+                Params.Input[index_of_new_param].Optional = true;
+                index_of_new_param = -1;
+            }
+        }
+
+        #endregion
     }
 
 
@@ -165,6 +338,15 @@ namespace DYear
                             CalculateStats(dhrs, commonKeys, stat_hours, mask);
                         }
                         break;
+
+                    case CType.MonthlyDiurnal:
+                        for (int mth = 0; mth < 12; mth++) for (int hour = 0; hour < 24; hour++)
+                        {
+                            mask.maskByMonthAndHour(mth,hour);
+                            CalculateStats(dhrs, commonKeys, stat_hours, mask);
+                        }
+                        break;
+
                     case CType.Daily:
                         for (int day = 0; day < 365; day++)
                         {
@@ -195,20 +377,25 @@ namespace DYear
         {
             Dictionary<string, List<float>> value_dict = new Dictionary<string, List<float>>();
             foreach (string key in commonKeys) { value_dict.Add(key, new List<float>()); }
+            int average_hour_of_year = 0;
+            int count = 0;
             foreach (DHr hour in dhrs)
             {
                 if (mask.eval(hour))
                 {
+                    count++;
+                    average_hour_of_year += hour.hr;
                     foreach (string key in commonKeys) { value_dict[key].Add(hour.val(key)); }
                 }
             }
-            DHr meanHr = new DHr();
-            DHr modeHr = new DHr();
-            DHr highHr = new DHr();
-            DHr uqHr = new DHr();
-            DHr medianHr = new DHr();
-            DHr lqHr = new DHr();
-            DHr lowHr = new DHr();
+            average_hour_of_year = average_hour_of_year / count;
+            DHr meanHr = new DHr(average_hour_of_year);
+            DHr modeHr = new DHr(average_hour_of_year);
+            DHr highHr = new DHr(average_hour_of_year);
+            DHr uqHr = new DHr(average_hour_of_year);
+            DHr medianHr = new DHr(average_hour_of_year);
+            DHr lqHr = new DHr(average_hour_of_year);
+            DHr lowHr = new DHr(average_hour_of_year);
             foreach (string key in commonKeys)
             {
                 value_dict[key].Sort();
@@ -231,7 +418,6 @@ namespace DYear
         public override Guid ComponentGuid { get { return new Guid("{FE2E05AF-B869-4C75-B3E8-7BA09EA3984B}"); } }
         protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
     }
-
 
     public class Dhr_RunningAverageComponent : GH_Component
     {

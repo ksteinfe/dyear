@@ -8,6 +8,8 @@ namespace DYear
 {
     public static class Util
     {
+        public static int defaultYear = 1999;
+
         public static float dbrh_to_ah(float db, float rh)
         {
             // absolute humidity from relative humidity and dry bulb
@@ -21,6 +23,23 @@ namespace DYear
 
             return (float)(2.16679 * (6.1162 * (Math.Pow(10, ((7.5892 * db) / (db + 240.71))) * rh) * 100 / (273.16 + db)));
         }
+
+
+        public static int hourOfYearFromDatetime(DateTime dt) {
+            if (dt.Year == defaultYear + 1) { return 8759; }
+            if (dt.Year == defaultYear) { return (dt.DayOfYear - 1) * 24 + dt.Hour - 1; }
+            return -999;
+        }
+
+        public static DateTime datetimeFromHourOfYear(int hour)
+        {
+            return new DateTime(defaultYear, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddHours(hour);
+        }
+
+        public static DateTime baseDatetime(){
+            return new DateTime(defaultYear, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        }
+
 
     }
 
