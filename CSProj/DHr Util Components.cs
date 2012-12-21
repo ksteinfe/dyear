@@ -4,6 +4,7 @@ using System.Text;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 using System.Drawing;
+using System.Linq;
 using DYear.Statistics;
 
 namespace DYear {
@@ -141,6 +142,9 @@ namespace DYear {
         protected override void RegisterInputParams( GH_Component.GH_InputParamManager pManager ) {
             pManager.RegisterParam(new GHParam_DHr(), "DHours", "A", "The first set of Dhours", GH_ParamAccess.list);
             pManager.RegisterParam(new GHParam_DHr(), "DHours", "B", "The second set of Dhours", GH_ParamAccess.list);
+
+            pManager[0].Optional = false;
+            pManager[1].Optional = false;
         }
 
         protected override void RegisterOutputParams( GH_Component.GH_OutputParamManager pManager ) {
@@ -150,41 +154,59 @@ namespace DYear {
 
         protected override void SolveInstance( IGH_DataAccess DA ) {
 
-            Dictionary<string, List<DHr>> input_dict = new Dictionary<string, List<DHr>>();
+            List<DHr>[] inputs = new List<DHr>[Params.Input.Count];
             for (int i = 0; i < Params.Input.Count; i++) {
                 List<DHr> hrs = new List<DHr>();
-                if (DA.GetDataList(i, hrs)) { input_dict.Add(Params.Input[i].NickName.ToLowerInvariant().Trim(), hrs); }
+                if (DA.GetDataList(i, hrs)) { inputs[i] = hrs; }
             }
 
-            if (input_dict.Count >= 2) {
-                List<int> hour_indices = new List<int>(); // holds the combined list of hours represented in all lists
-                Dictionary<string, List<DHr>> clean_dict = new Dictionary<string, List<DHr>>();
-                #region Clean and Sort Incoming Hours
-                foreach (KeyValuePair<string, List<DHr>> entry in input_dict) {
-                    List<int> dups = new List<int>();
-                    List<DHr> temp = new List<DHr>();
-                    foreach (DHr hr in entry.Value) {
-                        if (!dups.Contains(hr.hr)) { temp.Add(hr); dups.Add(hr.hr); } else { this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Found a duplicate hour in second list of hours at index " + hr.hr + "\nPlease clean up your hourstreams before merging"); }
-                        if (!hour_indices.Contains(hr.hr)) { hour_indices.Add(hr.hr); }
-                    }
+            int hr_count = inputs[0].Count;
+            int first_hour_int = inputs[0][0].hr;
+            for (int i = 1; i < inputs.Length; i++) {
+                if (inputs[i].Count != hr_count) hr_count = -1;
+                if (inputs[i][0].hr != first_hour_int) first_hour_int = -999;
+            }
 
-                    clean_dict.Add(entry.Key, temp);
+            if ((hr_count > 0) && (first_hour_int >= -1)) {
+                DHr[] hrsOut = new DHr[hr_count];
+                for (int h = 0; h < hr_count; h++) hrsOut[h] = (new DHr(inputs[0][h].hr));
+
+                for (int i = 0; i < inputs.Length; i++) {
+                    string input_nickname = Params.Input[i].NickName;
+                    for (int h = 0; h < hr_count; h++) {
+                        DHr hr = inputs[i][h];
+                        foreach (string key in hr.keys) {
+                            if (input_nickname == "none") hrsOut[h].put(key, hr.val(key));
+                            else hrsOut[h].put((key + " :: " + input_nickname).ToLowerInvariant().Trim(), hr.val(key));
+                        }
+                    }
                 }
-                #endregion
+                DA.SetDataList(0, hrsOut);
+            } else {
+                // here we handle 
 
-                List<DHr> hrsOut = new List<DHr>();
-                foreach (int i in hour_indices) {
-                    DHr hrOut = new DHr(i);
-                    foreach (KeyValuePair<string, List<DHr>> entry in clean_dict) {
-                        foreach (DHr hr in entry.Value) foreach (string key in hr.keys) {
-                                if (entry.Key == "none") hrOut.put(key, hr.val(key));
-                                else hrOut.put((key + " :: " + entry.Key).ToLowerInvariant().Trim(), hr.val(key));
-                            }
+                List<int> hour_indices = new List<int>(); // holds the combined list of hours represented in all lists
+                foreach (List<DHr> hours in inputs) {
+                    foreach (DHr hr in hours) if (!hour_indices.Contains(hr.hr)) hour_indices.Add(hr.hr);
+                }
+
+                DHr[] hrsOut = new DHr[hour_indices.Count];
+                foreach (int hour_index in hour_indices) hrsOut[hour_index] = (new DHr(hour_index));
+
+                for (int i = 0; i < inputs.Length; i++) {
+                    List<DHr> hours = inputs[i];
+                    string input_nickname = Params.Input[i].NickName;
+                    foreach (int hour_index in hour_indices) {
+                        DHr hr = hours.Find(hr_src => hr_src.hr == hour_index);
+                        foreach (string key in hr.keys) {
+                            if (input_nickname == "none") hrsOut[hour_index].put(key, hr.val(key));
+                            else hrsOut[hour_index].put((key + " :: " + input_nickname).ToLowerInvariant().Trim(), hr.val(key));
+                        }
                     }
-                    hrsOut.Add(hrOut);
                 }
                 DA.SetDataList(0, hrsOut);
             }
+
         }
         public override Guid ComponentGuid { get { return new Guid("{5EC55608-99F1-4CEF-8D28-819EB7EFCD62}"); } }
         protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
@@ -222,7 +244,7 @@ namespace DYear {
             if (index_of_new_param >= 0) {
                 Params.Input[index_of_new_param].NickName = alpha[total_params_added].ToString();
                 Params.Input[index_of_new_param].Access = GH_ParamAccess.list;
-                Params.Input[index_of_new_param].Optional = true;
+                Params.Input[index_of_new_param].Optional = false;
                 index_of_new_param = -1;
             }
         }
@@ -321,16 +343,16 @@ namespace DYear {
             }
         }
 
-        private static void CalculateStats( List<DHr> dhrs, string[] commonKeys, Dictionary<string, List<DHr>> stat_hours, HourMask mask ) {
+        private void CalculateStats( List<DHr> dhrs, string[] keys, Dictionary<string, List<DHr>> stat_hours_dict, HourMask mask, bool calculate_mode = false ) {
             Dictionary<string, List<float>> value_dict = new Dictionary<string, List<float>>();
-            foreach (string key in commonKeys) { value_dict.Add(key, new List<float>()); }
+            foreach (string key in keys) { value_dict.Add(key, new List<float>()); }
             int average_hour_of_year = 0;
             int count = 0;
             foreach (DHr hour in dhrs) {
                 if (mask.eval(hour)) {
                     count++;
                     average_hour_of_year += hour.hr;
-                    foreach (string key in commonKeys) { value_dict[key].Add(hour.val(key)); }
+                    foreach (string key in keys) { value_dict[key].Add(hour.val(key)); }
                 }
             }
             average_hour_of_year = average_hour_of_year / count;
@@ -341,24 +363,33 @@ namespace DYear {
             DHr medianHr = new DHr(average_hour_of_year);
             DHr lqHr = new DHr(average_hour_of_year);
             DHr lowHr = new DHr(average_hour_of_year);
-            foreach (string key in commonKeys) {
-                value_dict[key].Sort();
-                meanHr.put(key, value_dict[key].Mean());
-                foreach (float f in value_dict[key].Modes()) { modeHr.put(key, f); }
-                highHr.put(key, value_dict[key][value_dict[key].Count - 1]);
-                uqHr.put(key, value_dict[key].Quartile(0.75f));
-                medianHr.put(key, value_dict[key].Median());
-                lqHr.put(key, value_dict[key].Quartile(0.75f));
-                lowHr.put(key, value_dict[key][0]);
+
+            if (calculate_mode) {
+                foreach (string key in keys) {
+                    value_dict[key].Sort();
+                    meanHr.put(key, value_dict[key].Mean());
+                    highHr.put(key, value_dict[key][value_dict[key].Count - 1]);
+                    uqHr.put(key, value_dict[key].Quartile(0.75f));
+                    medianHr.put(key, value_dict[key].Median());
+                    lqHr.put(key, value_dict[key].Quartile(0.75f));
+                    lowHr.put(key, value_dict[key][0]);
+
+                    List<float> modes = value_dict[key].Modes().ToList<float>();
+                    if (modes.Count > 1) this.AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, String.Format("Multiple values associated with the key '{0}' occur equally often, resulting in multiple Mode values.  I've returned the first mode encountered", key));
+                    if (modes.Count >= 1) modeHr.put(key, modes[0]);
+                    else this.AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, String.Format("Each value associated with the key '{0}' is unique.  Unable to calculate Mode", key));
+                }
             }
-            stat_hours["meanHrs"].Add(meanHr);
-            stat_hours["modeHrs"].Add(modeHr);
-            stat_hours["highHrs"].Add(highHr);
-            stat_hours["uqHrs"].Add(uqHr);
-            stat_hours["medianHrs"].Add(medianHr);
-            stat_hours["lqHrs"].Add(lqHr);
-            stat_hours["lowHrs"].Add(lowHr);
+            stat_hours_dict["meanHrs"].Add(meanHr);
+            if (calculate_mode) stat_hours_dict["modeHrs"].Add(modeHr);
+            stat_hours_dict["highHrs"].Add(highHr);
+            stat_hours_dict["uqHrs"].Add(uqHr);
+            stat_hours_dict["medianHrs"].Add(medianHr);
+            stat_hours_dict["lqHrs"].Add(lqHr);
+            stat_hours_dict["lowHrs"].Add(lowHr);
         }
+
+
         public override Guid ComponentGuid { get { return new Guid("{FE2E05AF-B869-4C75-B3E8-7BA09EA3984B}"); } }
         protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
     }
@@ -450,7 +481,7 @@ namespace DYear {
                 max_mask.maskByDayOfYear(max_day, max_day);
                 HourMask min_mask = new HourMask();
                 min_mask.maskByDayOfYear(min_day, min_day);
-                
+
                 List<DHr> maxHrs = new List<DHr>();
                 foreach (DHr hr in dhrs) if (max_mask.eval(hr)) maxHrs.Add(hr);
                 List<DHr> minHrs = new List<DHr>();
