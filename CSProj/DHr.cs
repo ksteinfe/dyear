@@ -17,6 +17,7 @@ namespace DYear
         internal int m_hr; //hour of year
         public Point3d pos;
         public Color color;
+        public static float INVALID_VAL = 99999.99f;
 
         public MDHr()
         {

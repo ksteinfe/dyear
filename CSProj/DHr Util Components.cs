@@ -277,6 +277,7 @@ namespace DYear {
             pManager.RegisterParam(new GHParam_DHr(), "Median Hours", "Q2", "Hours that represent the median values of all hours in the selected time cycle", GH_ParamAccess.list);
             pManager.RegisterParam(new GHParam_DHr(), "Lower Quantile Hours", "Q1", "Hours that represent the lower quantile (0.25) values of all hours in the selected time cycle", GH_ParamAccess.list);
             pManager.RegisterParam(new GHParam_DHr(), "Low Hours", "Q0", "Hours that represent the lowest values of all hours in the selected time cycle", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Sum Hours", "Sum", "Hours that represent the summation of the values of all hours in the selected time cycle", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance( IGH_DataAccess DA ) {
@@ -300,6 +301,7 @@ namespace DYear {
                 stat_hours.Add("medianHrs", new List<DHr>());
                 stat_hours.Add("lqHrs", new List<DHr>());
                 stat_hours.Add("lowHrs", new List<DHr>());
+                stat_hours.Add("sumHrs", new List<DHr>());
 
                 HourMask mask = new HourMask();
 
@@ -307,26 +309,26 @@ namespace DYear {
                     case CType.Monthly:
                         for (int mth = 0; mth < 12; mth++) {
                             mask.maskByMonthOfYear(mth);
-                            CalculateStats(dhrs, commonKeys, stat_hours, mask);
+                            CalculateStats(dhrs, commonKeys, stat_hours, mask, true);
                         }
                         break;
 
                     case CType.MonthlyDiurnal:
                         for (int mth = 0; mth < 12; mth++) for (int hour = 0; hour < 24; hour++) {
                                 mask.maskByMonthAndHour(mth, hour);
-                                CalculateStats(dhrs, commonKeys, stat_hours, mask);
+                                CalculateStats(dhrs, commonKeys, stat_hours, mask, true);
                             }
                         break;
 
                     case CType.Daily:
                         for (int day = 0; day < 365; day++) {
                             mask.maskByDayOfYear(day, day); // passing in same day twice masks to this single day
-                            CalculateStats(dhrs, commonKeys, stat_hours, mask);
+                            CalculateStats(dhrs, commonKeys, stat_hours, mask, true);
                         }
                         break;
                     case CType.Yearly:
                         mask.fillMask(true); // all hours may pass
-                        CalculateStats(dhrs, commonKeys, stat_hours, mask);
+                        CalculateStats(dhrs, commonKeys, stat_hours, mask, true);
                         break;
                     default:
                         this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Time period option not yet implimented.  Cannot produce statistics.");
@@ -340,6 +342,7 @@ namespace DYear {
                 DA.SetDataList(4, stat_hours["medianHrs"]);
                 DA.SetDataList(5, stat_hours["lqHrs"]);
                 DA.SetDataList(6, stat_hours["lowHrs"]);
+                DA.SetDataList(7, stat_hours["sumHrs"]);
             }
         }
 
@@ -363,6 +366,7 @@ namespace DYear {
             DHr medianHr = new DHr(average_hour_of_year);
             DHr lqHr = new DHr(average_hour_of_year);
             DHr lowHr = new DHr(average_hour_of_year);
+            DHr sumHr = new DHr(average_hour_of_year);
 
             if (calculate_mode) {
                 foreach (string key in keys) {
@@ -373,11 +377,15 @@ namespace DYear {
                     medianHr.put(key, value_dict[key].Median());
                     lqHr.put(key, value_dict[key].Quartile(0.75f));
                     lowHr.put(key, value_dict[key][0]);
+                    sumHr.put(key, value_dict[key].Sum());
 
                     List<float> modes = value_dict[key].Modes().ToList<float>();
-                    if (modes.Count > 1) this.AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, String.Format("Multiple values associated with the key '{0}' occur equally often, resulting in multiple Mode values.  I've returned the first mode encountered", key));
+                    //if (modes.Count > 1) this.AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, String.Format("Multiple values associated with the key '{0}' occur equally often, resulting in multiple Mode values.  I've returned the first mode encountered", key));
                     if (modes.Count >= 1) modeHr.put(key, modes[0]);
-                    else this.AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, String.Format("Each value associated with the key '{0}' is unique.  Unable to calculate Mode", key));
+                    else {
+                        //this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, String.Format("Each value associated with the key '{0}' is unique.  Unable to calculate Mode", key));
+                        modeHr.put(key, MDHr.INVALID_VAL);
+                    }
                 }
             }
             stat_hours_dict["meanHrs"].Add(meanHr);
@@ -387,6 +395,7 @@ namespace DYear {
             stat_hours_dict["medianHrs"].Add(medianHr);
             stat_hours_dict["lqHrs"].Add(lqHr);
             stat_hours_dict["lowHrs"].Add(lowHr);
+            stat_hours_dict["sumHrs"].Add(sumHr);
         }
 
 
