@@ -123,6 +123,8 @@ namespace DYear
             return MDHr.commonkeys(mhours.ToArray());
         }
 
+        public int day_of_year { get{ return dt.DayOfYear - 1; } }
+
         #endregion 
 
         #region // GH STUFF
