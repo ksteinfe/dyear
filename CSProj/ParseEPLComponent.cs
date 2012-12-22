@@ -171,6 +171,7 @@ namespace DYear
                     // process zone name
                     string zone_name = headers[n].Split(':')[0].Trim();
                     zone_name = zone_name.ToLower();
+                    zone_name = DHr.cleankey(zone_name);
 
                     // process col name
                     string col_name = headers[n].Split(':')[1];
@@ -179,6 +180,7 @@ namespace DYear
                         col_name = col_name.Substring(0, offset);
                     col_name = col_name.Trim();
                     col_name = col_name.ToLower();
+                    col_name = DHr.cleankey(col_name);
 
                     // register this column header in our zone_dict
                     if (!col_mapping.ContainsKey(zone_name)) { col_mapping.Add(zone_name, new Dictionary<string, int>()); }
