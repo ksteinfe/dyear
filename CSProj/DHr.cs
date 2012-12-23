@@ -181,6 +181,24 @@ namespace DYear {
 
         #endregion
 
+        public static string BuildCSVString(List<DHr> hours)
+        {
+            StringBuilder sb = new StringBuilder();
+            string delimiter = ",";
+            List<string> keys = new List<string>(new string[]{"hour","datetime"});
+            keys.AddRange(DHr.commonkeys(hours.ToArray()));
+            sb.AppendLine(string.Join(delimiter, keys.ToArray()));
+            foreach (DHr hr in hours)
+            {
+                string[] vals = new string[keys.Count];
+                vals[0] = hr.hr.ToString();
+                vals[1] = hr.dt.ToString("MM/dd H:00");
+                for (int k = 2; k < keys.Count; k++) vals[k] = hr.val(keys[k]).ToString();
+                sb.AppendLine(string.Join(delimiter, vals));
+            }
+            return sb.ToString();
+        }
+
         public int CompareTo( DHr other ) { return this.hr.CompareTo(other.hr); }
     }
 
@@ -219,10 +237,7 @@ namespace DYear {
             okeys_vol = new List<string>();
 
             List<string> allKeys = new List<string>();
-            Grasshopper.Kernel.Data.GH_Structure<DHr> data = PersistentData;
-            if (has_source_data) data = this.m_data;
-            
-
+            List<DHr> data = ContainedHrs();
             foreach (DHr hr in data) {
                 if (hr.IsValid) {
                     foreach (string key in hr.keys) { if (!allKeys.Contains(key)) { allKeys.Add(key); } }
@@ -245,6 +260,15 @@ namespace DYear {
             }
             keys_vol.Sort();
             okeys_vol.Sort();
+        }
+
+        public List<DHr> ContainedHrs()
+        {
+            Grasshopper.Kernel.Data.GH_Structure<DHr> tree = PersistentData;
+            if (has_source_data) tree = this.m_data;
+            List<DHr> data = new List<DHr>();
+            foreach (var v in tree.AllData(true)) data.Add((DHr)v);
+            return data;
         }
 
         public override void AppendAdditionalMenuItems( ToolStripDropDown menu ) {
@@ -273,19 +297,8 @@ namespace DYear {
             SaveFileDialog sDialog = new SaveFileDialog();
             sDialog.Filter = "csv|*.csv";
             if (sDialog.ShowDialog() == DialogResult.OK) {
-                string delimiter = ",";  
-	 
-	            string[][] output = new string[][]{  
-	                new string[]{"sorry", "brendon", "but"},  
-	                new string[]{"it's", "not", "working"} ,
-                    new string[]{"yet", " ", " "} 
-	            };  
-	            int length = output.GetLength(0);  
-	            StringBuilder sb = new StringBuilder();  
-	            for (int index = 0; index < length; index++)  
-	                sb.AppendLine(string.Join(delimiter, output[index]));  
-	 
-	            File.WriteAllText(sDialog.FileName, sb.ToString()); 
+                string csvString = DHr.BuildCSVString(ContainedHrs());
+                File.WriteAllText(sDialog.FileName, csvString); 
             }
         }
 
@@ -324,7 +337,7 @@ namespace DYear {
 
             // The height of our object is always 100
             int height = 50;
-            if (Owner.has_persistent_data) height = 75;
+            if (Owner.has_persistent_data) height = 67;
 
             // Assign the width and height to the Bounds property.
             // Also, make sure the Bounds are anchored to the Pivot
@@ -405,13 +418,14 @@ namespace DYear {
 
                 if (Owner.has_persistent_data ){
 
-                    RectangleF xtraBounds = new RectangleF(new PointF(capBounds.Location.X,capBounds.Location.Y+50), new SizeF(Bounds.Width, 25));
+                    RectangleF xtraBounds = new RectangleF(new PointF(capBounds.Location.X,capBounds.Location.Y+52), new SizeF(Bounds.Width, 15));
                     RectangleF xTextRectangle = xtraBounds;
 
                     palette = GH_Palette.Black;
                     if (Owner.has_source_data) palette = GH_Palette.Grey;
 
                     GH_Capsule tcap = GH_Capsule.CreateTextCapsule(xtraBounds, xTextRectangle, palette, "INTERNAL DHRS");
+                    tcap.Font = GH_FontServer.Small;
 
                     tcap.Render(graphics, Selected, Owner.Locked, true);
                     tcap.Dispose(); // Always dispose of a GH_Capsule when you're done with it.

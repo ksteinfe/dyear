@@ -238,7 +238,6 @@ namespace DYear
         {
             base.AddedToDocument(document);
             this.Attributes.Bounds = new RectangleF(this.Attributes.Pivot, new SizeF(365, 96));
-
         }
     }
 

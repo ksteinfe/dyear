@@ -17,13 +17,11 @@ namespace DYear {
         protected override void RegisterInputParams( GH_Component.GH_InputParamManager pManager ) {
             pManager.Register_StringParam("Value Key", "Key", "The name of the value to extract", GH_ParamAccess.item);
             pManager.RegisterParam(new GHParam_DHr(), "DHour", "Dhr", "The Dhour from which to extract a value", GH_ParamAccess.list);
-
         }
 
         protected override void RegisterOutputParams( GH_Component.GH_OutputParamManager pManager ) {
             pManager.Register_DoubleParam("Value", "Val", "The extracted value", GH_ParamAccess.list);
-            pManager.Register_IntervalParam("Range", "Rng", "An interval that describes the range of values found in the given list of Dhours", GH_ParamAccess.list);
-
+            pManager.Register_IntervalParam("Range", "Rng", "An interval that describes the range of values found in the given list of Dhours for this key", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance( IGH_DataAccess DA ) {
@@ -42,7 +40,6 @@ namespace DYear {
                 }
 
                 DA.SetDataList(0, vals);
-
                 DA.SetData(1, new Interval(min, max));
             }
         }
@@ -251,7 +248,6 @@ namespace DYear {
 
         #endregion
     }
-
 
     public class Dhr_PeriodStatsComponent : GH_Component {
 
@@ -535,5 +531,6 @@ namespace DYear {
         public override Guid ComponentGuid { get { return new Guid("{7171C527-5E98-427D-9B91-200DA77F9F8D}"); } }
         protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
     }
+
 
 }

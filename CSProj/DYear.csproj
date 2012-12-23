@@ -49,7 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DHr.cs" />
-    <Compile Include="HourInfo.cs" />
+    <Compile Include="Heatmap.cs" />
     <Compile Include="ParseEPLComponent.cs" />
     <Compile Include="SunPosition.cs" />
     <Compile Include="HourMask.cs" />
