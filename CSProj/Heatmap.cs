@@ -5,9 +5,11 @@ using System.Windows.Forms;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 using System.Drawing;
+using System.Drawing.Imaging;
 using Grasshopper.GUI;
 using Grasshopper.GUI.Canvas;
 using Grasshopper.Kernel.Attributes;
+
 
 namespace DYear
 {
@@ -169,7 +171,7 @@ namespace DYear
                 //if (realOwner.isPlotable) bmp = makeHeatmapImage(realOwner);
                 //graphics.DrawImage(bmp, imgBounds);
                 if (realOwner.isPlotable) drawHeatmapImage(realOwner, graphics, imgBounds);
-                else graphics.FillRectangle(new SolidBrush(Color.FromArgb(64,255,255,255)), imgBounds);
+                else graphics.FillRectangle(new SolidBrush(Color.FromArgb(64, 255, 255, 255)), imgBounds);
 
                 // draw lines
                 //graphics.DrawLine(new Pen(Color.White), new PointF(imgBounds.Left, imgBounds.Top), new PointF(imgBounds.Right, imgBounds.Top));
@@ -178,7 +180,7 @@ namespace DYear
             }
         }
 
-        private void drawHeatmapImage(Dhr_HeatmapComponent Owner, Graphics graphics, RectangleF imgBounds)
+        public void drawHeatmapImage(Dhr_HeatmapComponent Owner, Graphics graphics, RectangleF imgBounds)
         {
             SizeF pixelSize = new SizeF(imgBounds.Width / 365.0f, imgBounds.Height / 24.0f);
             int i = 0;
@@ -195,7 +197,7 @@ namespace DYear
                     }
                     SolidBrush brush = new SolidBrush(c);
                     System.Drawing.PointF pt = new System.Drawing.PointF(imgBounds.Location.X + pixelSize.Width * d, imgBounds.Location.Y + pixelSize.Height * h);
-                    graphics.FillRectangle(brush, new RectangleF(pt,pixelSize));
+                    graphics.FillRectangle(brush, new RectangleF(pt, pixelSize));
                     i++;
                 }
 
