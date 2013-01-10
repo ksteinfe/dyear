@@ -36,8 +36,13 @@ namespace DYear
         public ParseEPLComponent() 
         
             //Call the base constructor
-            : base("ParseEPlus","EPL","Parses an Energy Plus Output file","DYear","Parse")
+            : base("ParseEPlus", "EPL", "Parses an Energy Plus Output file", "DYear", "Aquire")
         { }
+        public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
+        public override Guid ComponentGuid { get { return new Guid("{ECA812CB-6007-41B5-90EA-A3E19F5CD9AF}"); } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
+
+
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager){ }
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) { pManager.Register_StringParam("keys", "keys", "a list of all keys found in all parsed hours.  formatted as 'zonename :: key' or sometimes 'zonename :: subzone : key"); }
 
@@ -329,10 +334,6 @@ namespace DYear
 
         private void Menu_FilepathClicked(Object sender, EventArgs e) { System.Diagnostics.Process.Start("explorer.exe", @"/select, " + this.filepath); }
         
-        public override Guid ComponentGuid { get { return new Guid("{ECA812CB-6007-41B5-90EA-A3E19F5CD9AF}"); } }
-
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
-
         public void VariableParameterMaintenance() { foreach (IGH_Param param in Params.Output) { param.MutableNickName = false;} }
 
     }

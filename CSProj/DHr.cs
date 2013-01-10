@@ -24,13 +24,13 @@ namespace DYear {
             pos = new Point3d();
             color = Color.FromArgb(0, 0, 0);
         }
-        public MDHr( MDHr t ) {
+        public MDHr(MDHr t) {
             this.m_hr = t.m_hr;
             this.m_vals = new Dictionary<string, float>(t.m_vals);
             pos = new Point3d(t.pos.X, t.pos.Y, t.pos.Z);
             color = Color.FromArgb(t.color.A, t.color.R, t.color.G, t.color.B);
         }
-        public MDHr( int hr )
+        public MDHr(int hr)
             : this() {
             if ((hr >= 0) && (hr < 8760)) { m_hr = hr; } else { m_hr = -1; }
             this.m_vals = new Dictionary<string, float>();
@@ -46,7 +46,7 @@ namespace DYear {
             get { return new List<string>(m_vals.Keys).ToArray(); }
         }
 
-        public static string[] commonkeys( MDHr[] hours ) {
+        public static string[] commonkeys(MDHr[] hours) {
             List<string> allKeys = new List<string>();
             foreach (MDHr hr in hours) { foreach (string key in hr.keys) { if (!allKeys.Contains(key)) { allKeys.Add(key); } } }
             List<string> cmnKeys = new List<string>();
@@ -65,14 +65,14 @@ namespace DYear {
 
     public class DHr : GH_Goo<MDHr>, IComparable<DHr> {
         public DHr() : base() { this.Value = new MDHr(); }
-        public DHr( MDHr instance ) { this.Value = instance; }
-        public DHr( DHr instance ) { this.Value = new MDHr(instance.Value); }
+        public DHr(MDHr instance) { this.Value = instance; }
+        public DHr(DHr instance) { this.Value = new MDHr(instance.Value); }
         public override IGH_Goo Duplicate() { return new DHr(this); }
 
 
-        public DHr( int hr ) { this.Value = new MDHr(hr); }
+        public DHr(int hr) { this.Value = new MDHr(hr); }
 
-        public static string cleankey( string key ) {
+        public static string cleankey(string key) {
             key = Regex.Replace(key, @"\s+", " "); // collapse multiple spaces
             key = Regex.Replace(key, @"[^\w\.@:\[\] -]", ""); // only allow normal word chars, brackets, dashes, spaces
             return key;
@@ -98,11 +98,11 @@ namespace DYear {
             set { Value.color = value; }
         }
 
-        public float val( string key ) { return Value.m_vals[key]; }
-        public void put( string key, float val ) { Value.m_vals[DHr.cleankey(key)] = val; }
-        public void put_plus( string key, float val ) { Value.m_vals[key] = Value.m_vals[key] + val; }
-        public void put_mult( string key, float val ) { Value.m_vals[key] = Value.m_vals[key] * val; }
-        public void put_div( string key, float val ) { Value.m_vals[key] = Value.m_vals[key] / val; }
+        public float val(string key) { return Value.m_vals[key]; }
+        public void put(string key, float val) { Value.m_vals[DHr.cleankey(key)] = val; }
+        public void put_plus(string key, float val) { Value.m_vals[key] = Value.m_vals[key] + val; }
+        public void put_mult(string key, float val) { Value.m_vals[key] = Value.m_vals[key] * val; }
+        public void put_div(string key, float val) { Value.m_vals[key] = Value.m_vals[key] / val; }
 
         public string[] keys { get { return Value.keys; } }
         public float[] values {
@@ -119,12 +119,31 @@ namespace DYear {
             return ret;
         }
 
+        public static bool get_domain(string key, DHr[] dhrs, ref float[] vals, ref Interval domain) {
+            key = cleankey(key);
+            if (dhrs.Length == 0) return false;
+            foreach (DHr hr in dhrs) if (!hr.containsKey(key)) return false;
 
-        public bool containsKey( string key ) { return Value.m_vals.ContainsKey(key); }
+            vals = new float[dhrs.Length];
+            double max = dhrs[0].val(key);
+            double min = dhrs[0].val(key);
+            for (int h = 0; h < dhrs.Length; h++) {
+                float val = dhrs[h].val(key);
+                vals[h] = val;
+                if (val > max) max = val;
+                if (val < min) min = val;
+            }
+            domain = new Interval(min, max);
+
+            return true;
+        }
+
+
+        public bool containsKey(string key) { return Value.m_vals.ContainsKey(key); }
 
         public void clear() { this.Value.m_vals.Clear(); }
 
-        public static string[] commonkeys( DHr[] hours ) {
+        public static string[] commonkeys(DHr[] hours) {
             List<MDHr> mhours = new List<MDHr>();
             foreach (DHr hour in hours) { mhours.Add(hour.Value); }
             return MDHr.commonkeys(mhours.ToArray());
@@ -152,13 +171,13 @@ namespace DYear {
         public override string TypeName { get { return "Data Hour"; } }
 
 
-        public override bool Write( GH_IO.Serialization.GH_IWriter writer ) {
+        public override bool Write(GH_IO.Serialization.GH_IWriter writer) {
             writer.SetString("hr", hr.ToString());
             writer.SetString("keys", string.Join(",", keys));
             writer.SetString("values", string.Join(",", values_as_strings()));
             return base.Write(writer);
         }
-        public override bool Read( GH_IO.Serialization.GH_IReader reader ) {
+        public override bool Read(GH_IO.Serialization.GH_IReader reader) {
             string hrstring = "";
             if (!reader.TryGetString("hr", ref hrstring)) return false;
             int h = -1;
@@ -181,15 +200,13 @@ namespace DYear {
 
         #endregion
 
-        public static string BuildCSVString(List<DHr> hours)
-        {
+        public static string BuildCSVString(List<DHr> hours) {
             StringBuilder sb = new StringBuilder();
             string delimiter = ",";
-            List<string> keys = new List<string>(new string[]{"hour","datetime"});
+            List<string> keys = new List<string>(new string[] { "hour", "datetime" });
             keys.AddRange(DHr.commonkeys(hours.ToArray()));
             sb.AppendLine(string.Join(delimiter, keys.ToArray()));
-            foreach (DHr hr in hours)
-            {
+            foreach (DHr hr in hours) {
                 string[] vals = new string[keys.Count];
                 vals[0] = hr.hr.ToString();
                 vals[1] = hr.dt.ToString("MM/dd H:00");
@@ -199,7 +216,7 @@ namespace DYear {
             return sb.ToString();
         }
 
-        public int CompareTo( DHr other ) { return this.hr.CompareTo(other.hr); }
+        public int CompareTo(DHr other) { return this.hr.CompareTo(other.hr); }
     }
 
     public class GHParam_DHr : GH_PersistentParam<DHr> {
@@ -216,12 +233,13 @@ namespace DYear {
         }
 
         public GHParam_DHr()
-            : base(new GH_InstanceDescription("Data Hour", "Dhr", "Represents a collection of Data Hours", "DYear", "Params")) {
-                updateLocals();
+            : base(new GH_InstanceDescription("Data Hour", "Dhr", "Represents a collection of Data Hours", "DYear", "Primitive")) {
+            updateLocals();
         }
-
         public override System.Guid ComponentGuid { get { return new Guid("{1573577D-7B23-46C4-803D-594ECE47BA10}"); } }
         protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_Param_Dhr; } }
+        public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
+
 
         public override void CreateAttributes() { m_attributes = new GHParam_DHr_Attributes(this); }
 
@@ -262,8 +280,7 @@ namespace DYear {
             okeys_vol.Sort();
         }
 
-        public List<DHr> ContainedHrs()
-        {
+        public List<DHr> ContainedHrs() {
             Grasshopper.Kernel.Data.GH_Structure<DHr> tree = PersistentData;
             if (has_source_data) tree = this.m_data;
             List<DHr> data = new List<DHr>();
@@ -271,7 +288,7 @@ namespace DYear {
             return data;
         }
 
-        public override void AppendAdditionalMenuItems( ToolStripDropDown menu ) {
+        public override void AppendAdditionalMenuItems(ToolStripDropDown menu) {
             //base.AppendAdditionalMenuItems(menu);
 
             Menu_AppendWireDisplay(menu);
@@ -293,21 +310,21 @@ namespace DYear {
             }
         }
 
-        private void Menu_ExportHoursClicked( Object sender, EventArgs e ) {
+        private void Menu_ExportHoursClicked(Object sender, EventArgs e) {
             SaveFileDialog sDialog = new SaveFileDialog();
             sDialog.Filter = "csv|*.csv";
             if (sDialog.ShowDialog() == DialogResult.OK) {
                 string csvString = DHr.BuildCSVString(ContainedHrs());
-                File.WriteAllText(sDialog.FileName, csvString); 
+                File.WriteAllText(sDialog.FileName, csvString);
             }
         }
 
-        private void Menu_KeyItemClicked( Object sender, EventArgs e ) {
+        private void Menu_KeyItemClicked(Object sender, EventArgs e) {
             System.Windows.Forms.ToolStripMenuItem ti = (System.Windows.Forms.ToolStripMenuItem)(sender);
             System.Windows.Forms.Clipboard.SetText(ti.Text);
         }
 
-        public override void AddedToDocument( GH_Document document ) {
+        public override void AddedToDocument(GH_Document document) {
             base.AddedToDocument(document);
             updateLocals();
         }
@@ -315,11 +332,11 @@ namespace DYear {
             base.OnVolatileDataCollected();
             updateLocals();
         }
-        
-        protected override GH_GetterResult Prompt_Singular( ref DHr value ) {
+
+        protected override GH_GetterResult Prompt_Singular(ref DHr value) {
             return GH_GetterResult.cancel;
         }
-        protected override GH_GetterResult Prompt_Plural( ref List<DHr> values ) {
+        protected override GH_GetterResult Prompt_Plural(ref List<DHr> values) {
             return GH_GetterResult.cancel;
         }
 
@@ -327,7 +344,7 @@ namespace DYear {
     }
 
     public class GHParam_DHr_Attributes : GH_Attributes<GHParam_DHr> {
-        public GHParam_DHr_Attributes( GHParam_DHr owner ) : base(owner) { }
+        public GHParam_DHr_Attributes(GHParam_DHr owner) : base(owner) { }
 
         protected override void Layout() {
             // Compute the width of the NickName of the owner (plus some extra padding), 
@@ -349,7 +366,7 @@ namespace DYear {
             // invalid when the layout expires. 
         }
 
-        protected override void Render( GH_Canvas canvas, Graphics graphics, GH_CanvasChannel channel ) {
+        protected override void Render(GH_Canvas canvas, Graphics graphics, GH_CanvasChannel channel) {
             // Render all the wires that connect the Owner to all its Sources.
             if (channel == GH_CanvasChannel.Wires) {
                 RenderIncomingWires(canvas.Painter, Owner.Sources, Owner.WireDisplay);
@@ -360,7 +377,7 @@ namespace DYear {
                 // Define the default palette.
                 GH_Palette palette = GH_Palette.Normal;
 
-                
+
                 // Adjust palette based on the Owner's worst case messaging level.
                 switch (Owner.RuntimeMessageLevel) {
                     case GH_RuntimeMessageLevel.Warning:
@@ -373,7 +390,7 @@ namespace DYear {
                 }
 
                 // Create a new Capsule without text or icon.
-                RectangleF capBounds = new RectangleF(Pivot,new SizeF(Bounds.Width,50));
+                RectangleF capBounds = new RectangleF(Pivot, new SizeF(Bounds.Width, 50));
                 GH_Capsule capsule = GH_Capsule.CreateCapsule(capBounds, palette);
 
                 capsule = GH_Capsule.CreateCapsule(capBounds, palette);
@@ -416,9 +433,9 @@ namespace DYear {
                 textRectangle.Y += 15;
                 graphics.DrawString(String.Format("{0} Keys", Owner.keys_vol.Count), GH_FontServer.Standard, Brushes.Black, textRectangle, format);
 
-                if (Owner.has_persistent_data ){
+                if (Owner.has_persistent_data) {
 
-                    RectangleF xtraBounds = new RectangleF(new PointF(capBounds.Location.X,capBounds.Location.Y+52), new SizeF(Bounds.Width, 15));
+                    RectangleF xtraBounds = new RectangleF(new PointF(capBounds.Location.X, capBounds.Location.Y + 52), new SizeF(Bounds.Width, 15));
                     RectangleF xTextRectangle = xtraBounds;
 
                     palette = GH_Palette.Black;
@@ -440,7 +457,46 @@ namespace DYear {
 
     }
 
+    public class Dhr_MakeHourComponent : GH_Component {
+        public Dhr_MakeHourComponent()
+            //Call the base constructor
+            : base("Construct Hour", "Dhour", "Constructs a Dhour out of its constituent parts", "DYear", "Primitive") { }
 
+        public override Guid ComponentGuid { get { return new Guid("{39DD748B-79FE-4B9E-9108-32ACF9751688}"); } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
+        public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary; } }
+
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
+            pManager.Register_IntegerParam("Hour Number", "Hr", "The hour of the year to construct, =between 0 and 8759.  Defaults to -1, which produces an invalid Dhour.", -1, GH_ParamAccess.list);
+            pManager.Register_StringParam("Keys", "Keys", "The named keys to store in this Dhour. Must be a list of equal length to the 'Vals' parameter", GH_ParamAccess.list);
+            pManager.Register_DoubleParam("Values", "Vals", "The values to store in this Dhour.  Must be a list of equal length to the 'Keys' parameter", GH_ParamAccess.tree);
+        }
+
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
+            pManager.RegisterParam(new GHParam_DHr(), "Dhour", "Dhour", "The resulting Dhour.", GH_ParamAccess.list);
+        }
+
+        protected override void SolveInstance(IGH_DataAccess DA) {
+            List<int> hrs = new List<int>();
+            List<string> keys = new List<string>();
+            Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Number> valtree = new Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Number>();
+            if ((DA.GetDataList(1, keys)) && (DA.GetDataTree(2, out valtree)) && (DA.GetDataList(0, hrs))) {
+
+                if (hrs.Count != valtree.Branches.Count) this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "List matching error.  Hours and Vals must match.  If you pass in more than one hour number, then you must pass in a tree of values with one branch per hour number, and vice-versa.");
+                else foreach (List<GH_Number> branch in valtree.Branches) if (keys.Count != branch.Count) this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "List matching error.  Keys and Vals must offer lists of the same length.  If you pass in a tree of values, each branch must contain a list of the same length as the list of keys.");
+                else {
+                    List<DHr> hours = new List<DHr>();
+                    for (int n = 0; n < valtree.Branches.Count; n++) {
+                        DHr hr = new DHr(hrs[n]);
+                        for (int m = 0; m < keys.Count; m++) hr.put(keys[m], (float)valtree.Branches[n][m].Value);
+                        hours.Add(hr);
+                    }
+                    DA.SetDataList(0, hours);
+                }
+            }
+        }
+
+    }
 
 
 

@@ -21,10 +21,13 @@ namespace DYear
 
         public Dhr_HeatmapComponent()
             //Call the base constructor
-            : base("Quick Heatmap", "Heatmap", "Given a list of DHrs and a key, displays a greyscale heatmap of the values associated with that key.\nRed and blue indicates hours that fall outside the given domain.", "DYear", "Manipulate")
+            : base("Quick Heatmap", "Heatmap", "Given a list of DHrs and a key, displays a greyscale heatmap of the values associated with that key.\nRed and blue indicates hours that fall outside the given domain.", "DYear", "Visualize")
         {
             clearLocals();
         }
+        public override Guid ComponentGuid { get { return new Guid("{709C00D7-4E99-46AB-AD4A-A7235C822726}"); } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
+        public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
 
         void clearLocals()
         {
@@ -85,13 +88,9 @@ namespace DYear
             }
         }
 
-        public override Guid ComponentGuid { get { return new Guid("{709C00D7-4E99-46AB-AD4A-A7235C822726}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
         public override void CreateAttributes() { m_attributes = new Dhr_HeatmapComponent_Attributes(this); }
     }
-
-
-
+    
     public class Dhr_HeatmapComponent_Attributes : GH_ComponentAttributes
     {
         public Dhr_HeatmapComponent_Attributes(Dhr_HeatmapComponent owner) : base(owner) { }
