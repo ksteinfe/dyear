@@ -17,7 +17,7 @@ namespace DYear {
             : base("Get Value", "GetVal", "Extracts a value from a Dhour", "DYear", "Primitive") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary; } }
         public override Guid ComponentGuid { get { return new Guid("{1DB488D9-7709-423B-BAA3-F8E91E4185B1}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             pManager.Register_StringParam("Value Key", "Key", "The name of the value to extract", GH_ParamAccess.item);
@@ -58,7 +58,7 @@ namespace DYear {
             : base("Get Keys", "GetKeys", "Extracts the Keys from a Dhour or a list of Dhours", "DYear", "Primitive") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary | GH_Exposure.obscure; } }
         public override Guid ComponentGuid { get { return new Guid("{4093D0D1-6533-4196-80E1-FDD4FC880995}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
@@ -108,7 +108,7 @@ namespace DYear {
             : base("Limit Keys", "LimitKeys", "Removes unwanted keys from a Dhour or list of Dhours", "DYear", "Filter") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
         public override Guid ComponentGuid { get { return new Guid("{DE92A87D-73F0-46E4-AC6A-D4934587F2AF}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             pManager.Register_StringParam("Keys to Keep", "Keys", "The keys that should remain in the given Dhour", GH_ParamAccess.list);
@@ -146,7 +146,7 @@ namespace DYear {
         }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
         public override Guid ComponentGuid { get { return new Guid("{5EC55608-99F1-4CEF-8D28-819EB7EFCD62}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             pManager.RegisterParam(new GHParam_DHr(), "DHours", "A", "The first set of Dhours", GH_ParamAccess.list);
@@ -270,7 +270,7 @@ namespace DYear {
             : base("Periodic Statistics", "Stats", "Performs statistical operations over a given time period (daily, monthly, or monthly diurnal) on a year's worth of Dhours", "DYear", "Filter") { this.cycle_type = CType.Daily; }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary; } }
         public override Guid ComponentGuid { get { return new Guid("{FE2E05AF-B869-4C75-B3E8-7BA09EA3984B}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             GHParam_DHr param = new GHParam_DHr();
@@ -416,7 +416,7 @@ namespace DYear {
             : base("Rolling Mean", "RollMean", "Computes the rolling mean for each key in each Dhour in a collection of Dhours.\nReturns the modified set of Dhours", "DYear", "Filter") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary; } }
         public override Guid ComponentGuid { get { return new Guid("{1B7EAAA1-BB1F-4CBD-9538-D2B004D306D9}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
@@ -465,7 +465,7 @@ namespace DYear {
             : base("Extreme Periods", "Extremes", "Returns the Dhours containing the min and max of a given key from a collection of Dhours.\nIf multiple instances of the value are encountred, the first occurance is returned.", "DYear", "Filter") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary; } }
         public override Guid ComponentGuid { get { return new Guid("{0C50E2C4-8719-42C0-B3F9-283A8A8F80E1}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to search for extremes within", GH_ParamAccess.list);
@@ -520,7 +520,7 @@ namespace DYear {
             : base("Mask Hours", "MaskHours", "Filters a given set of Dhours through an Hourmask.\nOnly those hours allowed by the mask are returned", "DYear", "Filter") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.tertiary; } }
         public override Guid ComponentGuid { get { return new Guid("{7171C527-5E98-427D-9B91-200DA77F9F8D}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
@@ -556,7 +556,7 @@ namespace DYear {
             : base("Gradient Colorization", "GradColor", "Assigns a color value for each hour given, based on a given key and doman, using a single-interpolation gradient between two given colors.", "DYear", "Decorate") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
         public override Guid ComponentGuid { get { return new Guid("{8DB38FB8-5B50-4DBC-B0B0-230757565D4E}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to apply color values", GH_ParamAccess.list);
@@ -606,7 +606,7 @@ namespace DYear {
             : base("Double Gradient Colorization", "GradColor2", "Assigns a color value for each hour given, based on a given key and doman, using a double-interpolation gradient between four given colors.", "DYear", "Decorate") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
         public override Guid ComponentGuid { get { return new Guid("{ABFB05A1-E552-47E6-8F48-DAE90FD16825}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to apply color values", GH_ParamAccess.list);

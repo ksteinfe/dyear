@@ -463,7 +463,7 @@ namespace DYear {
             : base("Construct Hour", "Dhour", "Constructs a Dhour out of its constituent parts", "DYear", "Primitive") { }
 
         public override Guid ComponentGuid { get { return new Guid("{39DD748B-79FE-4B9E-9108-32ACF9751688}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {

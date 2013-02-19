@@ -67,6 +67,7 @@
     <Content Include="Resources\Component.png" />
     <Content Include="Resources\Icons_Param_Dhr.png" />
     <Content Include="Resources\Icons_Param_YearMask.png" />
+    <None Include="Resources\Olgay.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

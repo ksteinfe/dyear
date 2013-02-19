@@ -26,7 +26,7 @@ namespace DYear
             clearLocals();
         }
         public override Guid ComponentGuid { get { return new Guid("{709C00D7-4E99-46AB-AD4A-A7235C822726}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
 
         void clearLocals()

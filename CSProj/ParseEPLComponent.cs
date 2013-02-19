@@ -40,7 +40,7 @@ namespace DYear
         { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
         public override Guid ComponentGuid { get { return new Guid("{ECA812CB-6007-41B5-90EA-A3E19F5CD9AF}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
 
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager){ }

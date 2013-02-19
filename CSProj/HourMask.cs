@@ -216,7 +216,7 @@ namespace DYear
         { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
         public override Guid ComponentGuid { get { return new Guid("{5F81F476-42EA-48F2-BB32-6788D62396D1}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Component; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
 
         public HourMask maskToDraw()
         {
