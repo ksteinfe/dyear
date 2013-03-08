@@ -100,7 +100,7 @@ namespace DYear {
     #endregion
 
 
-    #region Filter Components
+    #region Filter & Sort Components
 
     public class Dhr_LimitKeysComponent : GH_Component {
         public Dhr_LimitKeysComponent()
@@ -263,7 +263,7 @@ namespace DYear {
     public class Dhr_PeriodStatsComponent : GH_Component {
 
         public CType cycle_type;
-        public enum CType { Yearly, Monthly, MonthlyDiurnal, Daily, Invalid };
+        public enum CType { Yearly, Monthly, MonthlyDiurnal, WeeklyDiurnal, Daily, Invalid };
 
         public Dhr_PeriodStatsComponent()
             //Call the base constructor
@@ -275,7 +275,7 @@ namespace DYear {
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             GHParam_DHr param = new GHParam_DHr();
             pManager.RegisterParam(param, "DHours", "Dhrs", "The Dhours from which to calculate statistics", GH_ParamAccess.list);
-            pManager.Register_StringParam("Period", "P", "The time period to cycle through.  Choose 'yearly', 'monthly', 'monthly diurnal', or 'daily'.");
+            pManager.Register_StringParam("Period", "P", "The time period to cycle through.  Choose 'yearly', 'monthly', 'monthly diurnal', 'weekly diurnal', or 'daily'.");
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
@@ -297,9 +297,10 @@ namespace DYear {
                 period_string = period_string.ToLowerInvariant().Trim();
                 this.cycle_type = CType.Invalid;
                 if (period_string.Contains("year")) { this.cycle_type = CType.Yearly; }
-                if (period_string.Contains("month")) { this.cycle_type = CType.Monthly; }
-                if (period_string.Contains("day") || period_string.Contains("daily")) { this.cycle_type = CType.Daily; }
-                if (period_string.Contains("diurnal")) { this.cycle_type = CType.MonthlyDiurnal; }
+                else if (period_string.Contains("monthly diurnal")) { this.cycle_type = CType.MonthlyDiurnal; }
+                else if (period_string.Contains("month")) { this.cycle_type = CType.Monthly; } 
+                else if (period_string.Contains("day") || period_string.Contains("daily")) { this.cycle_type = CType.Daily; } 
+                else if (period_string.Contains("weekly")) { this.cycle_type = CType.WeeklyDiurnal; }
 
                 string[] commonKeys = DHr.commonkeys(dhrs.ToArray());
                 Dictionary<string, List<DHr>> stat_hours = new Dictionary<string, List<DHr>>();
@@ -325,6 +326,13 @@ namespace DYear {
                     case CType.MonthlyDiurnal:
                         for (int mth = 0; mth < 12; mth++) for (int hour = 0; hour < 24; hour++) {
                                 mask.maskByMonthAndHour(mth, hour);
+                                CalculateStats(dhrs, commonKeys, stat_hours, mask, true);
+                            }
+                        break;
+
+                    case CType.WeeklyDiurnal:
+                        for (int wk = 0; wk < 52; wk++) for (int hour = 0; hour < 24; hour++) {
+                                mask.maskByWeekAndHour(wk, hour);
                                 CalculateStats(dhrs, commonKeys, stat_hours, mask, true);
                             }
                         break;
@@ -459,6 +467,74 @@ namespace DYear {
 
     }
 
+
+    public class Dhr_HourFreqComponent : GH_Component {
+        public Dhr_HourFreqComponent()
+            //Call the base constructor
+            : base("Hour Frequency", "HourFreq", "", "DYear", "Filter") { }
+        public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary; } }
+        public override Guid ComponentGuid { get { return new Guid("{D468F5AB-2272-483A-947D-93257818873F}"); } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
+            pManager.Register_StringParam("Key", "Key", "The key to count hours on", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Interval", "Ival", "The overall interval to sample.  This interval will be subdivided into a number of subintervals.  Any values that fall outside of this iterval will be appended to the highest or lowest count", GH_ParamAccess.item);
+            pManager.Register_IntegerParam("Subdivisions", "Div", "The number of subintervals to divide the above interval into", 10, GH_ParamAccess.item);
+        }
+
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
+            pManager.Register_IntegerParam("Frequencies", "Freqs", "A list of frequencies describing the number of times an hour falls within a corresponding interval, returned below", GH_ParamAccess.list);
+            pManager.Register_IntervalParam("Subintervals", "Ivals", "A list of intervals, produced by subdividing the given interval, that describe ranges of values used to calculate the above frequencies", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "Hours that fall into the above subintervals", GH_ParamAccess.tree);
+        }
+
+        protected override void SolveInstance(IGH_DataAccess DA) {
+            List<DHr> dhrs = new List<DHr>();
+            string key = "";
+            Interval ival_overall = new Interval();
+            int subdivs = 0;
+            if ((DA.GetDataList(0, dhrs)) && (DA.GetData(1, ref key)) && (DA.GetData(2, ref ival_overall)) && (DA.GetData(3, ref subdivs))) {
+                Grasshopper.Kernel.Data.GH_Structure<DHr> hrsOut = new Grasshopper.Kernel.Data.GH_Structure<DHr>();
+                List<int> freqOut = new List<int>();
+                List<Interval> ivalsOut = new List<Interval>();
+
+                if (ival_overall.IsDecreasing) ival_overall.Swap();
+                double delta = ival_overall.Length / subdivs;
+                for (int n = 0; n < subdivs; n++) {
+                    ivalsOut.Add(new Interval(ival_overall.T0 + n * delta, ival_overall.T0 + ((n + 1) * delta)));
+                    freqOut.Add(0);
+                   
+                }
+
+                foreach (DHr dhr in dhrs){
+                    if (dhr.val(key) < ivalsOut[0].T0) {
+                        freqOut[0] = freqOut[0] + 1;
+                        continue;
+                    }
+                    if (dhr.val(key) > ivalsOut[ivalsOut.Count-1].T1) {
+                        freqOut[freqOut.Count - 1] = freqOut[freqOut.Count - 1] + 1;
+                        continue;
+                    }
+                    int n=0;
+                    foreach (Interval ival in ivalsOut) {
+                        if (ival.IncludesParameter(dhr.val(key))) {
+                            freqOut[n] = freqOut[n] + 1;
+                            hrsOut.Append(dhr, new Grasshopper.Kernel.Data.GH_Path(n));
+                            break;
+                        }
+                        n++;
+                    }
+                }
+                DA.SetDataList(0, freqOut);
+                DA.SetDataList(1, ivalsOut);
+                DA.SetDataTree(2, hrsOut);
+            }
+        }
+
+    }
+
+
     public class Dhr_ExtremePeriodsComponent : GH_Component {
         public Dhr_ExtremePeriodsComponent()
             //Call the base constructor
@@ -546,6 +622,42 @@ namespace DYear {
 
     }
 
+    public class Dhr_SortHoursComponent : GH_Component {
+        public Dhr_SortHoursComponent()
+            //Call the base constructor
+            : base("Sort Hours", "SortHours", "Sorts a given list of Dhours by the values found in a given key", "DYear", "Filter") { }
+        public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.tertiary; } }
+        public override Guid ComponentGuid { get { return new Guid("{76D71582-FBA0-4376-B6D4-4FF6A4326D1E}"); } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
+            pManager.Register_StringParam("Key", "Key", "The key to sort on", GH_ParamAccess.item);
+            pManager.Register_BooleanParam("Ascending/Decending", "Asc", "Set to false to sort decending.", true);
+        }
+
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The masked Dhours", GH_ParamAccess.list);
+        }
+
+        protected override void SolveInstance(IGH_DataAccess DA) {
+            List<DHr> dhrs = new List<DHr>();
+            string key = "";
+            bool asc = true;
+            if ((DA.GetDataList(0, dhrs)) && (DA.GetData(1, ref key)) && (DA.GetData(2, ref asc))) {
+                //dhrs.Sort((x, y) => );
+                List<DHr> hrsOut;
+                if (asc) hrsOut = dhrs.OrderBy(s => s.val(key)).ToList();
+                else hrsOut = dhrs.OrderByDescending(s => s.val(key)).ToList();
+                DA.SetDataList(0, hrsOut);
+            }
+        }
+
+    }
+
+
+
     #endregion
 
     #region Decorating Components
@@ -571,6 +683,7 @@ namespace DYear {
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
             pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The colorized Dhours", GH_ParamAccess.list);
+            pManager.Register_ColourParam("Colors", "color", "The assigned colors", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA) {
@@ -587,15 +700,18 @@ namespace DYear {
                     for (int h = 0; h < hours.Count; h++) vals[h] = hours[h].val(key);
                 }
 
+                List<Color> colors = new List<Color>();
                 for (int h = 0; h < hours.Count; h++) {
                     double t = domain.NormalizedParameterAt(vals[h]);
                     if (t < 0) { this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Value falls below minimum of specified domain at index" + h); t = 0; }
                     if (t > 1) { this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Value falls above maximum of specified domain at index" + h); t = 1; }
                     Color c = Util.InterpolateColor(c0, c1, t);
+                    colors.Add(c);
                     hours[h].color = c;
                 }
 
                 DA.SetDataList(0, hours);
+                DA.SetDataList(1, colors);
             }
         }
     }
@@ -625,6 +741,7 @@ namespace DYear {
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
             pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The colorized Dhours", GH_ParamAccess.list);
+            pManager.Register_ColourParam("Colors", "color", "The assigned colors", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA) {
@@ -651,7 +768,7 @@ namespace DYear {
                     for (int h = 0; h < hours.Count; h++) vals_b[h] = hours[h].val(key_b);
                 }
 
-
+                List<Color> colors = new List<Color>();
                 for (int h = 0; h < hours.Count; h++) {
                     double ta = domain_a.NormalizedParameterAt(vals_a[h]);
                     if (ta < 0) { this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Value for key A falls below minimum of specified domain at index" + h); continue; }
@@ -664,18 +781,114 @@ namespace DYear {
                     Color c0 = Util.InterpolateColor(c00, c10, ta);
                     Color c1 = Util.InterpolateColor(c01, c11, ta);
                     Color c = Util.InterpolateColor(c0, c1, tb);
+                    colors.Add(c);
                     hours[h].color = c;
                 }
 
                 DA.SetDataList(0, hours);
+                DA.SetDataList(1, colors);
             }
         }
     }
 
 
+    #endregion
+
+
+    #region Spatializing Components
+
+    public class Dhr_SunPosGraphComponent : GH_Component {
+        public Dhr_SunPosGraphComponent()
+            //Call the base constructor
+            : base("Solar Position Spatialization", "SunPos", "Assigns a position on a Sunchart Graph for each hour given, based on a given solar alt and azimuth key", "DYear", "Spatialize") { }
+        public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
+        public override Guid ComponentGuid { get { return new Guid("{84F09813-A273-4664-AAF4-19098CF1745B}"); } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
+            pManager.Register_2DIntervalParam("Graph Dimensions", "Dim", "The dimensions of the resulting graph", GH_ParamAccess.item);
+            pManager.Register_StringParam("Solar Altitude Key", "Alt Key", "The key related to the solar altitude", "solar_altitude", GH_ParamAccess.item);
+            pManager.Register_StringParam("Solar Azimuth Key", "Azm Key", "The key related to the solar azimuth", "solar_azimuth", GH_ParamAccess.item);
+            pManager.Register_BooleanParam("Cull Nighttime", "Cull Night", "Cull nighttime hours?", true, GH_ParamAccess.item);
+            
+            this.Params.Input[1].Optional = true;
+            this.Params.Input[2].Optional = true;
+            this.Params.Input[3].Optional = true;
+            this.Params.Input[4].Optional = true;
+        }
+
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.list);
+            pManager.Register_PointParam("Positions", "pts", "The assigned positions of the hours", GH_ParamAccess.list);
+            pManager.Register_CurveParam("Lines", "lines", "The lines", GH_ParamAccess.list);
+        }
+
+        protected override void SolveInstance(IGH_DataAccess DA) {
+            List<DHr> hours = new List<DHr>();
+            string alt_key = "solar_altitude";
+            Interval alt_ival = new Interval(0, Math.PI / 2);
+            string azm_key = "solar_azimuth";
+            Interval azm_ival = new Interval(0, Math.PI * 2);
+            bool cull_night = true;
+
+            if (DA.GetDataList(0, hours)) {
+                Grasshopper.Kernel.Types.UVInterval ival2d = new Grasshopper.Kernel.Types.UVInterval();
+                if (!DA.GetData(1, ref ival2d)){
+                    ival2d.U1 = 1.0;
+                    ival2d.V1 = 1.0;
+                }
+                DA.GetData(2, ref alt_key);
+                DA.GetData(3, ref azm_key);
+                DA.GetData(4, ref cull_night);
+
+
+                if (cull_night) {
+                    List<DHr> day_hours = new List<DHr>();
+                    for (int h = 1; h < hours.Count - 1; h++) {
+                        if ((hours[h].val(alt_key) >= 0) || (hours[h - 1].val(alt_key) >= 0) || (hours[h + 1].val(alt_key) >= 0))
+                            day_hours.Add(hours[h]);
+                    }
+                    hours = day_hours;
+                }
+
+
+                List<Point3d> points = new List<Point3d>();
+
+                for (int h = 0; h < hours.Count; h++) {
+                    //x = Interval.remap(hr.val("solar_azimuth"),Interval(0,math.pi*2),Interval(0,width))
+                    //y = Interval.remap(hr.val("solar_altitude"),Interval(0,math.pi/2),Interval(0,height))
+                    float x = (float) (azm_ival.NormalizedParameterAt(hours[h].val(azm_key)) * ival2d.U1 + ival2d.U0);
+                    float y = (float)(alt_ival.NormalizedParameterAt(hours[h].val(alt_key)) * ival2d.V1 + ival2d.V0);
+                    Point3d pt = new Point3d(x, y, 0);
+                    points.Add(pt);
+                    hours[h].pos = pt;
+                }
+
+                List<Polyline> plines = new List<Polyline>();
+                for (int h = 0; h < points.Count; h++) {
+                    List<Point3d> pts = new List<Point3d>();
+                    if ((h > 0) && (hours[h - 1].pos_x < hours[h].pos_x)) pts.Add(interp(hours[h - 1].pos, hours[h].pos, 0.5));
+                    pts.Add(hours[h].pos);
+                    if ((h < points.Count -1) && (hours[h + 1].pos_x > hours[h].pos_x)) pts.Add(interp(hours[h + 1].pos, hours[h].pos, 0.5));
+                    plines.Add(new Polyline(pts));
+                }
+
+                DA.SetDataList(0, hours);
+                DA.SetDataList(1, points);
+                DA.SetDataList(2, plines);
+            }
+        }
+
+        protected Point3d interp(Point3d pa, Point3d pb, double t) {
+            double x = (pb.X-pa.X)*t+pa.X;
+            double y = (pb.Y - pa.Y) * t + pa.Y;
+            double z = (pb.Z - pa.Z) * t + pa.Z;
+            return new Point3d(x, y, z);
+        }
+    }
 
 
 
     #endregion
-
 }

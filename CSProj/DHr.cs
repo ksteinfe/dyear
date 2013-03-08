@@ -93,6 +93,19 @@ namespace DYear {
             get { return Value.pos; }
             set { Value.pos = value; }
         }
+        public float pos_x {
+            get { return (float)(Value.pos.X); }
+            set { Value.pos.X = value; }
+        }
+        public float pos_y {
+            get { return (float)(Value.pos.Y); }
+            set { Value.pos.Y = value; }
+        }
+        public float pos_z {
+            get { return (float)(Value.pos.Z); }
+            set { Value.pos.Z = value; }
+        }
+
         public Color color {
             get { return Value.color; }
             set { Value.color = value; }

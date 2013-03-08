@@ -105,6 +105,20 @@ namespace DYear
             this.maskPerHour(flags);
         }
 
+
+        public void maskByWeekAndHour(int week, int hour) {
+            // produces a mask by selecting a week (0-51) and a time of day (0-23)
+            // produces a 8760 value mask corresponding to days of year to be applied to each hour of every day
+            // only hours falling within the selected week and occuring on the selected hour of day will pass
+
+            bool[] flags = new bool[8760];
+            for (int h = 0; h < 8760; h++) { flags[h] = false; }
+            for (int h = (week * 7 * 24)+hour; h < ((week+1)*7 * 24)+hour; h=h+24) {
+                if (h<8760) flags[h] = true;
+            }
+            this.maskPerHour(flags);
+        }
+
         public void fillMask(bool b)
         {
             this.Value = new List<bool> { };
