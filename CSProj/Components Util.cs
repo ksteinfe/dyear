@@ -477,6 +477,8 @@ namespace DYear {
             pManager.Register_StringParam("Key", "Key", "The key to count hours on", GH_ParamAccess.item);
             pManager.Register_IntervalParam("Interval", "Ival", "The overall interval to sample.  This interval will be subdivided into a number of subintervals.  Any values that fall outside of this iterval will be appended to the highest or lowest count", GH_ParamAccess.item);
             pManager.Register_IntegerParam("Subdivisions", "Div", "The number of subintervals to divide the above interval into", 10, GH_ParamAccess.item);
+
+            this.Params.Input[2].Optional = true;
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
@@ -488,9 +490,20 @@ namespace DYear {
         protected override void SolveInstance(IGH_DataAccess DA) {
             List<DHr> dhrs = new List<DHr>();
             string key = "";
-            Interval ival_overall = new Interval();
             int subdivs = 0;
-            if ((DA.GetDataList(0, dhrs)) && (DA.GetData(1, ref key)) && (DA.GetData(2, ref ival_overall)) && (DA.GetData(3, ref subdivs))) {
+            if ((DA.GetDataList(0, dhrs)) && (DA.GetData(1, ref key)) && (DA.GetData(3, ref subdivs))) {
+                Interval ival_overall = new Interval();
+                if (!DA.GetData(2, ref ival_overall)){
+                    // go thru the given hours and find the max and min value for the given key
+                    ival_overall.T0 = MDHr.INVALID_VAL;
+                    ival_overall.T1 = MDHr.INVALID_VAL;
+                    foreach (DHr dhr in dhrs) {
+                        float val = dhr.val(key);
+                        if ((ival_overall.T0==MDHr.INVALID_VAL)||(val <ival_overall.T0)) ival_overall.T0 = val;
+                        if ((ival_overall.T1==MDHr.INVALID_VAL)||(val >ival_overall.T1)) ival_overall.T1 = val;
+                    }
+                }
+
                 Grasshopper.Kernel.Data.GH_Structure<DHr> hrsOut = new Grasshopper.Kernel.Data.GH_Structure<DHr>();
                 List<int> freqOut = new List<int>();
                 List<Interval> ivalsOut = new List<Interval>();
@@ -514,9 +527,11 @@ namespace DYear {
                     }
                     int n = 0;
                     foreach (Interval ival in ivalsOut) {
+                        Grasshopper.Kernel.Data.GH_Path path = new Grasshopper.Kernel.Data.GH_Path(n);
+                        hrsOut.EnsurePath(path);
                         if (ival.IncludesParameter(dhr.val(key))) {
                             freqOut[n] = freqOut[n] + 1;
-                            hrsOut.Append(dhr, new Grasshopper.Kernel.Data.GH_Path(n));
+                            hrsOut.Append(dhr, path);
                             break;
                         }
                         n++;
