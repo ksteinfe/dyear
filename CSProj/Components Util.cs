@@ -296,11 +296,7 @@ namespace DYear {
                 if (period_string == "") { return; }
                 period_string = period_string.ToLowerInvariant().Trim();
                 this.cycle_type = CType.Invalid;
-                if (period_string.Contains("year")) { this.cycle_type = CType.Yearly; }
-                else if (period_string.Contains("monthly diurnal")) { this.cycle_type = CType.MonthlyDiurnal; }
-                else if (period_string.Contains("month")) { this.cycle_type = CType.Monthly; } 
-                else if (period_string.Contains("day") || period_string.Contains("daily")) { this.cycle_type = CType.Daily; } 
-                else if (period_string.Contains("weekly")) { this.cycle_type = CType.WeeklyDiurnal; }
+                if (period_string.Contains("year")) { this.cycle_type = CType.Yearly; } else if (period_string.Contains("monthly diurnal")) { this.cycle_type = CType.MonthlyDiurnal; } else if (period_string.Contains("month")) { this.cycle_type = CType.Monthly; } else if (period_string.Contains("day") || period_string.Contains("daily")) { this.cycle_type = CType.Daily; } else if (period_string.Contains("weekly")) { this.cycle_type = CType.WeeklyDiurnal; }
 
                 string[] commonKeys = DHr.commonkeys(dhrs.ToArray());
                 Dictionary<string, List<DHr>> stat_hours = new Dictionary<string, List<DHr>>();
@@ -504,19 +500,19 @@ namespace DYear {
                 for (int n = 0; n < subdivs; n++) {
                     ivalsOut.Add(new Interval(ival_overall.T0 + n * delta, ival_overall.T0 + ((n + 1) * delta)));
                     freqOut.Add(0);
-                   
+
                 }
 
-                foreach (DHr dhr in dhrs){
+                foreach (DHr dhr in dhrs) {
                     if (dhr.val(key) < ivalsOut[0].T0) {
                         freqOut[0] = freqOut[0] + 1;
                         continue;
                     }
-                    if (dhr.val(key) > ivalsOut[ivalsOut.Count-1].T1) {
+                    if (dhr.val(key) > ivalsOut[ivalsOut.Count - 1].T1) {
                         freqOut[freqOut.Count - 1] = freqOut[freqOut.Count - 1] + 1;
                         continue;
                     }
-                    int n=0;
+                    int n = 0;
                     foreach (Interval ival in ivalsOut) {
                         if (ival.IncludesParameter(dhr.val(key))) {
                             freqOut[n] = freqOut[n] + 1;
@@ -660,235 +656,4 @@ namespace DYear {
 
     #endregion
 
-    #region Decorating Components
-
-    public class Dhr_GradColorComponent : GH_Component {
-        public Dhr_GradColorComponent()
-            //Call the base constructor
-            : base("Gradient Colorization", "GradColor", "Assigns a color value for each hour given, based on a given key and doman, using a single-interpolation gradient between two given colors.", "DYear", "Decorate") { }
-        public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
-        public override Guid ComponentGuid { get { return new Guid("{8DB38FB8-5B50-4DBC-B0B0-230757565D4E}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
-
-        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to apply color values", GH_ParamAccess.list);
-            pManager.Register_StringParam("Key", "Key", "The key on which to base colorization", GH_ParamAccess.item);
-            pManager.Register_IntervalParam("Domain", "Rng", "The domain that will be used to map values unto colors.  Defaults to the range of given values.\nThe high end of the domain will correspond to the given high color, and the low end will correspond to the given low color.\nValues that fall outside of the given range will raise a warning.", GH_ParamAccess.item);
-            pManager.Register_ColourParam("High Color", "Hi", "The color to assign to hours with high values.  Defaults to white.", Color.White, GH_ParamAccess.item);
-            pManager.Register_ColourParam("High Color", "Lo", "The color to assign to hours with low values.  Defaults to black.", Color.Black, GH_ParamAccess.item);
-
-
-            this.Params.Input[2].Optional = true;
-        }
-
-        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The colorized Dhours", GH_ParamAccess.list);
-            pManager.Register_ColourParam("Colors", "color", "The assigned colors", GH_ParamAccess.list);
-        }
-
-        protected override void SolveInstance(IGH_DataAccess DA) {
-            List<DHr> hours = new List<DHr>();
-            string key = "";
-            Color c0 = new Color();
-            Color c1 = new Color();
-            Interval domain = new Interval();
-            if ((DA.GetDataList(0, hours)) && (DA.GetData(1, ref key)) && (DA.GetData(3, ref c1)) && (DA.GetData(4, ref c0))) {
-                float[] vals = new float[0];
-                if (!(DA.GetData(2, ref domain))) DHr.get_domain(key, hours.ToArray(), ref vals, ref domain);
-                else {
-                    vals = new float[hours.Count];
-                    for (int h = 0; h < hours.Count; h++) vals[h] = hours[h].val(key);
-                }
-
-                List<Color> colors = new List<Color>();
-                for (int h = 0; h < hours.Count; h++) {
-                    double t = domain.NormalizedParameterAt(vals[h]);
-                    if (t < 0) { this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Value falls below minimum of specified domain at index" + h); t = 0; }
-                    if (t > 1) { this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Value falls above maximum of specified domain at index" + h); t = 1; }
-                    Color c = Util.InterpolateColor(c0, c1, t);
-                    colors.Add(c);
-                    hours[h].color = c;
-                }
-
-                DA.SetDataList(0, hours);
-                DA.SetDataList(1, colors);
-            }
-        }
-    }
-
-    public class Dhr_GradColor2Component : GH_Component {
-        public Dhr_GradColor2Component()
-            //Call the base constructor
-            : base("Double Gradient Colorization", "GradColor2", "Assigns a color value for each hour given, based on a given key and doman, using a double-interpolation gradient between four given colors.", "DYear", "Decorate") { }
-        public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
-        public override Guid ComponentGuid { get { return new Guid("{ABFB05A1-E552-47E6-8F48-DAE90FD16825}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
-
-        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to apply color values", GH_ParamAccess.list);
-            pManager.Register_StringParam("Key A", "Key A", "The primary key on which to base colorization", GH_ParamAccess.item);
-            pManager.Register_IntervalParam("Domain A", "Rng A", "The domain that will be used to map values unto colors for Key A.  Defaults to the range of given values for Key A.\nValues that fall outside of the given range will raise a warning.", GH_ParamAccess.item);
-            pManager.Register_StringParam("Key B", "Key B", "The secondary key on which to base colorization", GH_ParamAccess.item);
-            pManager.Register_IntervalParam("Domain B", "Rng B", "The domain that will be used to map values unto colors for Key B.  Defaults to the range of given values for Key B.\nValues that fall outside of the given range will raise a warning.", GH_ParamAccess.item);
-            pManager.Register_ColourParam("A High, B High", "Hi-Hi", "The color to assign when A is high and B is high.  Defaults to red.", Color.Red, GH_ParamAccess.item);
-            pManager.Register_ColourParam("A High, B Low", "Hi-Lo", "The color to assign when A is high and B is low.  Defaults to yellow.", Color.Yellow, GH_ParamAccess.item);
-            pManager.Register_ColourParam("A Low, B High", "Lo-Hi", "The color to assign when A is high and B is high.  Defaults to blue.", Color.Blue, GH_ParamAccess.item);
-            pManager.Register_ColourParam("A Low, B Low", "Lo-Lo", "The color to assign when A is high and B is low.  Defaults to white.", Color.White, GH_ParamAccess.item);
-
-            this.Params.Input[2].Optional = true;
-            this.Params.Input[4].Optional = true;
-        }
-
-        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The colorized Dhours", GH_ParamAccess.list);
-            pManager.Register_ColourParam("Colors", "color", "The assigned colors", GH_ParamAccess.list);
-        }
-
-        protected override void SolveInstance(IGH_DataAccess DA) {
-            List<DHr> hours = new List<DHr>();
-            string key_a = "";
-            string key_b = "";
-            Color c11 = new Color();
-            Color c10 = new Color();
-            Color c01 = new Color();
-            Color c00 = new Color();
-            Interval domain_a = new Interval();
-            Interval domain_b = new Interval();
-            if ((DA.GetDataList(0, hours)) && (DA.GetData(1, ref key_a)) && (DA.GetData(3, ref key_b)) && (DA.GetData(5, ref c11)) && (DA.GetData(6, ref c10)) && (DA.GetData(7, ref c01)) && (DA.GetData(8, ref c00))   ) {
-                float[] vals_a = new float[0];
-                if (!(DA.GetData(2, ref domain_a))) DHr.get_domain(key_a, hours.ToArray(), ref vals_a, ref domain_a);
-                else {
-                    vals_a = new float[hours.Count];
-                    for (int h = 0; h < hours.Count; h++) vals_a[h] = hours[h].val(key_a);
-                }
-                float[] vals_b = new float[0];
-                if (!(DA.GetData(4, ref domain_b))) DHr.get_domain(key_b, hours.ToArray(), ref vals_b, ref domain_b);
-                else {
-                    vals_b = new float[hours.Count];
-                    for (int h = 0; h < hours.Count; h++) vals_b[h] = hours[h].val(key_b);
-                }
-
-                List<Color> colors = new List<Color>();
-                for (int h = 0; h < hours.Count; h++) {
-                    double ta = domain_a.NormalizedParameterAt(vals_a[h]);
-                    if (ta < 0) { this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Value for key A falls below minimum of specified domain at index" + h); continue; }
-                    if (ta > 1) { this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Value for key A falls above maximum of specified domain at index" + h); continue; }
-                   
-                    double tb = domain_b.NormalizedParameterAt(vals_b[h]);
-                    if (tb < 0) { this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Value for key B falls below minimum of specified domain at index" + h); continue; }
-                    if (tb > 1) { this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Value for key B falls above maximum of specified domain at index" + h); continue; }
-
-                    Color c0 = Util.InterpolateColor(c00, c10, ta);
-                    Color c1 = Util.InterpolateColor(c01, c11, ta);
-                    Color c = Util.InterpolateColor(c0, c1, tb);
-                    colors.Add(c);
-                    hours[h].color = c;
-                }
-
-                DA.SetDataList(0, hours);
-                DA.SetDataList(1, colors);
-            }
-        }
-    }
-
-
-    #endregion
-
-
-    #region Spatializing Components
-
-    public class Dhr_SunPosGraphComponent : GH_Component {
-        public Dhr_SunPosGraphComponent()
-            //Call the base constructor
-            : base("Solar Position Spatialization", "SunPos", "Assigns a position on a Sunchart Graph for each hour given, based on a given solar alt and azimuth key", "DYear", "Spatialize") { }
-        public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
-        public override Guid ComponentGuid { get { return new Guid("{84F09813-A273-4664-AAF4-19098CF1745B}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
-
-        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
-            pManager.Register_2DIntervalParam("Graph Dimensions", "Dim", "The dimensions of the resulting graph", GH_ParamAccess.item);
-            pManager.Register_StringParam("Solar Altitude Key", "Alt Key", "The key related to the solar altitude", "solar_altitude", GH_ParamAccess.item);
-            pManager.Register_StringParam("Solar Azimuth Key", "Azm Key", "The key related to the solar azimuth", "solar_azimuth", GH_ParamAccess.item);
-            pManager.Register_BooleanParam("Cull Nighttime", "Cull Night", "Cull nighttime hours?", true, GH_ParamAccess.item);
-            
-            this.Params.Input[1].Optional = true;
-            this.Params.Input[2].Optional = true;
-            this.Params.Input[3].Optional = true;
-            this.Params.Input[4].Optional = true;
-        }
-
-        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.list);
-            pManager.Register_PointParam("Positions", "pts", "The assigned positions of the hours", GH_ParamAccess.list);
-            pManager.Register_CurveParam("Lines", "lines", "The lines", GH_ParamAccess.list);
-        }
-
-        protected override void SolveInstance(IGH_DataAccess DA) {
-            List<DHr> hours = new List<DHr>();
-            string alt_key = "solar_altitude";
-            Interval alt_ival = new Interval(0, Math.PI / 2);
-            string azm_key = "solar_azimuth";
-            Interval azm_ival = new Interval(0, Math.PI * 2);
-            bool cull_night = true;
-
-            if (DA.GetDataList(0, hours)) {
-                Grasshopper.Kernel.Types.UVInterval ival2d = new Grasshopper.Kernel.Types.UVInterval();
-                if (!DA.GetData(1, ref ival2d)){
-                    ival2d.U1 = 1.0;
-                    ival2d.V1 = 1.0;
-                }
-                DA.GetData(2, ref alt_key);
-                DA.GetData(3, ref azm_key);
-                DA.GetData(4, ref cull_night);
-
-
-                if (cull_night) {
-                    List<DHr> day_hours = new List<DHr>();
-                    for (int h = 1; h < hours.Count - 1; h++) {
-                        if ((hours[h].val(alt_key) >= 0) || (hours[h - 1].val(alt_key) >= 0) || (hours[h + 1].val(alt_key) >= 0))
-                            day_hours.Add(hours[h]);
-                    }
-                    hours = day_hours;
-                }
-
-
-                List<Point3d> points = new List<Point3d>();
-
-                for (int h = 0; h < hours.Count; h++) {
-                    //x = Interval.remap(hr.val("solar_azimuth"),Interval(0,math.pi*2),Interval(0,width))
-                    //y = Interval.remap(hr.val("solar_altitude"),Interval(0,math.pi/2),Interval(0,height))
-                    float x = (float) (azm_ival.NormalizedParameterAt(hours[h].val(azm_key)) * ival2d.U1 + ival2d.U0);
-                    float y = (float)(alt_ival.NormalizedParameterAt(hours[h].val(alt_key)) * ival2d.V1 + ival2d.V0);
-                    Point3d pt = new Point3d(x, y, 0);
-                    points.Add(pt);
-                    hours[h].pos = pt;
-                }
-
-                List<Polyline> plines = new List<Polyline>();
-                for (int h = 0; h < points.Count; h++) {
-                    List<Point3d> pts = new List<Point3d>();
-                    if ((h > 0) && (hours[h - 1].pos_x < hours[h].pos_x)) pts.Add(interp(hours[h - 1].pos, hours[h].pos, 0.5));
-                    pts.Add(hours[h].pos);
-                    if ((h < points.Count -1) && (hours[h + 1].pos_x > hours[h].pos_x)) pts.Add(interp(hours[h + 1].pos, hours[h].pos, 0.5));
-                    plines.Add(new Polyline(pts));
-                }
-
-                DA.SetDataList(0, hours);
-                DA.SetDataList(1, points);
-                DA.SetDataList(2, plines);
-            }
-        }
-
-        protected Point3d interp(Point3d pa, Point3d pb, double t) {
-            double x = (pb.X-pa.X)*t+pa.X;
-            double y = (pb.Y - pa.Y) * t + pa.Y;
-            double z = (pb.Z - pa.Z) * t + pa.Z;
-            return new Point3d(x, y, z);
-        }
-    }
-
-
-
-    #endregion
 }
