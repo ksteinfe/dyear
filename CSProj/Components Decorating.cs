@@ -23,10 +23,12 @@ namespace DYear {
             pManager.Register_StringParam("Key", "Key", "The key on which to base colorization", GH_ParamAccess.item);
             pManager.Register_IntervalParam("Domain", "Rng", "The domain that will be used to map values unto colors.  Defaults to the range of given values.\nThe high end of the domain will correspond to the given high color, and the low end will correspond to the given low color.\nValues that fall outside of the given range will raise a warning.", GH_ParamAccess.item);
             pManager.Register_ColourParam("High Color", "Hi", "The color to assign to hours with high values.  Defaults to white.", Color.White, GH_ParamAccess.item);
+            pManager.Register_ColourParam("Mid Color", "Mid", "The color to assign to hours with middle values.  Optional.", GH_ParamAccess.item);
             pManager.Register_ColourParam("High Color", "Lo", "The color to assign to hours with low values.  Defaults to black.", Color.Black, GH_ParamAccess.item);
 
 
             this.Params.Input[2].Optional = true;
+            this.Params.Input[4].Optional = true;
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
@@ -39,8 +41,10 @@ namespace DYear {
             string key = "";
             Color c0 = new Color();
             Color c1 = new Color();
+            Color cm = new Color();
+            bool do_mid = false;
             Interval domain = new Interval();
-            if ((DA.GetDataList(0, hours)) && (DA.GetData(1, ref key)) && (DA.GetData(3, ref c1)) && (DA.GetData(4, ref c0))) {
+            if ((DA.GetDataList(0, hours)) && (DA.GetData(1, ref key)) && (DA.GetData(3, ref c1)) && (DA.GetData(5, ref c0))) {
                 float[] vals = new float[0];
                 if (!(DA.GetData(2, ref domain))) DHr.get_domain(key, hours.ToArray(), ref vals, ref domain);
                 else {
@@ -48,12 +52,22 @@ namespace DYear {
                     for (int h = 0; h < hours.Count; h++) vals[h] = hours[h].val(key);
                 }
 
+                if (DA.GetData(4, ref cm)) do_mid = true;
+
                 List<Color> colors = new List<Color>();
                 for (int h = 0; h < hours.Count; h++) {
                     double t = domain.NormalizedParameterAt(vals[h]);
                     if (t < 0) { this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Value falls below minimum of specified domain at index" + h); t = 0; }
                     if (t > 1) { this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Value falls above maximum of specified domain at index" + h); t = 1; }
-                    Color c = Util.InterpolateColor(c0, c1, t);
+
+                    Color c;
+                    if (!do_mid) c = Util.InterpolateColor(c0, c1, t);
+                    else {
+                        if (t == 0.5) c = cm;
+                        else if (t>0.5) c = Util.InterpolateColor(cm, c1, (t-0.5)*2);
+                        else c = Util.InterpolateColor(c0, cm, t * 2);
+                    }
+
                     colors.Add(c);
                     hours[h].color = c;
                 }
