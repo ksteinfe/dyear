@@ -633,15 +633,16 @@ namespace DYear {
             pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
             pManager.Register_StringParam("Key U", "Key U", "The first key to count hours on", GH_ParamAccess.item);
             pManager.Register_StringParam("Key U", "Key V", "The second key to count hours on", GH_ParamAccess.item);
-            pManager.Register_2DIntervalParam("UV Interval", "Ival2", "The overall two-dimensional interval to sample.  This interval will be subdivided into a number of subintervals.  Any values that fall outside of this iterval will be appended to the highest or lowest count", GH_ParamAccess.item);
-            pManager.Register_IntegerParam("Subdivisions U", "Div U", "The number of subintervals to divide the first interval into", 10, GH_ParamAccess.item);
-            pManager.Register_IntegerParam("Subdivisions V", "Div V", "The number of subintervals to divide the second interval into", 10, GH_ParamAccess.item);
+            pManager.Register_2DIntervalParam("UV Interval", "Ival2", "The overall two-dimensional interval to sample.  This interval will be subdivided into a number of subintervals.", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Subdivisions", "Divs", "An interval of two integer numbers that describe the number of subdivisions desired in the U and V dimensions", new Interval(4, 3), GH_ParamAccess.item);
+            pManager.Register_BooleanParam("Cull Outliers", "Cul", "If true, outlying values will be culled.  If false (default), any values that fall outside of this iterval will be appended to the highest or lowest count.", false, GH_ParamAccess.item);
+
             this.Params.Input[3].Optional = true;
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
             pManager.Register_IntegerParam("Frequencies", "Freqs", "A tree of frequencies describing the number of times an hour falls within a corresponding interval, returned below", GH_ParamAccess.tree);
-            pManager.Register_IntervalParam("Subintervals", "Ivals", "A tree of intervals, produced by subdividing the given interval, that describe ranges of values used to calculate the above frequencies", GH_ParamAccess.tree);
+            pManager.Register_2DIntervalParam("Subintervals", "Ivals", "A tree of intervals, produced by subdividing the given interval, that describe ranges of values used to calculate the above frequencies", GH_ParamAccess.tree);
             pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "Hours that fall into the above subintervals", GH_ParamAccess.tree);
         }
 
@@ -649,9 +650,12 @@ namespace DYear {
             List<DHr> dhrs = new List<DHr>();
             string key_u = "";
             string key_v = "";
-            int subdivs_u = 0;
-            int subdivs_v = 0;
-            if ((DA.GetDataList(0, dhrs)) && (DA.GetData(1, ref key_u)) && (DA.GetData(2, ref key_v)) && (DA.GetData(4, ref subdivs_u)) && (DA.GetData(5, ref subdivs_v))) {
+            Interval subdivs = new Interval();
+            if ((DA.GetDataList(0, dhrs)) && (DA.GetData(1, ref key_u)) && (DA.GetData(2, ref key_v)) && (DA.GetData(4, ref subdivs)))
+            {
+                int subdivs_u = (int) Math.Floor(subdivs.T0);
+                int subdivs_v = (int) Math.Floor(subdivs.T1);
+                
                 Grasshopper.Kernel.Types.UVInterval ival_overall = new Grasshopper.Kernel.Types.UVInterval();
                 if (!DA.GetData(3, ref ival_overall)) {
                     // go thru the given hours and find the max and min value for the given key
@@ -667,6 +671,10 @@ namespace DYear {
                     }
                 }
 
+                bool cull_outliers = false;
+                DA.GetData(5, ref cull_outliers);
+
+
                 Grasshopper.Kernel.Data.GH_Structure<DHr> hrsOut = new Grasshopper.Kernel.Data.GH_Structure<DHr>();
                 Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Integer> freqOut = new Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Integer>();
                 Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Interval2D> ivalsOut = new Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Interval2D>();
@@ -678,9 +686,9 @@ namespace DYear {
                 for (int u = 0; u < subdivs_u; u++) {
                     for (int v = 0; v < subdivs_v; v++) {
                         Grasshopper.Kernel.Data.GH_Path path = new Grasshopper.Kernel.Data.GH_Path(new int[] { u, v });
-                        freqOut.EnsurePath(path);
-                        freqOut.Append(new Grasshopper.Kernel.Types.GH_Integer(0), path);
                         ivalsOut.EnsurePath(path);
+                        hrsOut.EnsurePath(path);
+
                         Interval sub_u = new Interval(ival_overall.U.T0 + u * delta_u, ival_overall.U.T0 + ((u + 1) * delta_u));
                         Interval sub_v = new Interval(ival_overall.V.T0 + v * delta_v, ival_overall.V.T0 + ((v + 1) * delta_v));
                         Grasshopper.Kernel.Types.UVInterval sub_uv = new Grasshopper.Kernel.Types.UVInterval(sub_u, sub_v);
@@ -689,32 +697,54 @@ namespace DYear {
                         ivalsOut.Append(i2d, path);
                     }
                 }
-                /*
+                
                 foreach (DHr dhr in dhrs) {
-                    if (dhr.val(key) < ivalsOut[0].T0) {
-                        freqOut[0] = freqOut[0] + 1;
-                        continue;
-                    }
-                    if (dhr.val(key) > ivalsOut[ivalsOut.Count - 1].T1) {
-                        freqOut[freqOut.Count - 1] = freqOut[freqOut.Count - 1] + 1;
-                        continue;
-                    }
-                    int n = 0;
-                    foreach (Interval ival in ivalsOut) {
-                        Grasshopper.Kernel.Data.GH_Path path = new Grasshopper.Kernel.Data.GH_Path(n);
-                        hrsOut.EnsurePath(path);
-                        if (ival.IncludesParameter(dhr.val(key))) {
-                            freqOut[n] = freqOut[n] + 1;
-                            hrsOut.Append(dhr, path);
+                    int[] address = new int[] { -1 , -1};
+                    for (int u = 0; u < subdivs_u; u++)
+                    {
+                        Grasshopper.Kernel.Data.GH_Path path_u = new Grasshopper.Kernel.Data.GH_Path(new int[] { u, 0 });
+                        Interval sub_u = ivalsOut.get_DataItem(path_u, 0).Value.U;
+                        double val = dhr.val(key_u);
+                        if ((sub_u.IncludesParameter(val)) || ((!cull_outliers) && (u == 0) && (val <= sub_u.Min)) || ((!cull_outliers) && (u == subdivs_u - 1) && (val >= sub_u.Max)))
+                        {
+                            address[0] = u;
                             break;
                         }
-                        n++;
+                    }
+
+                    for (int v = 0; v < subdivs_v; v++)
+                    {
+                        Grasshopper.Kernel.Data.GH_Path path_v = new Grasshopper.Kernel.Data.GH_Path(new int[] { 0, v });
+                        Interval sub_v = ivalsOut.get_DataItem(path_v, 0).Value.V;
+                        double val = dhr.val(key_v);
+                        if ((sub_v.IncludesParameter(val)) || ((!cull_outliers) && (v == 0) && (val <= sub_v.Min)) || ((!cull_outliers) && (v == subdivs_v - 1) && (val >= sub_v.Max)))
+                        {
+                            address[1] = v;
+                            break;
+                        }
+                    }
+                    if ((address[0] < 0) || (address[1] < 0))
+                    {
+                        if (!cull_outliers) this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Crud. Could not place an outlier into any intervals.  What gives?!");
+                    }
+                    else
+                    {
+                        Grasshopper.Kernel.Data.GH_Path path = new Grasshopper.Kernel.Data.GH_Path(address);
+                        hrsOut.Append(dhr, path);
                     }
                 }
-                 */
+
+
+                foreach (Grasshopper.Kernel.Data.GH_Path path in hrsOut.Paths)
+                {
+                    int n = hrsOut.get_Branch(path).Count;
+                    freqOut.Append(new Grasshopper.Kernel.Types.GH_Integer(n), path);
+                }
+
+                
                 DA.SetDataTree(0, freqOut);
                 DA.SetDataTree(1, ivalsOut);
-                //DA.SetDataTree(2, hrsOut);
+                DA.SetDataTree(2, hrsOut);
             }
         }
 

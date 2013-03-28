@@ -502,7 +502,7 @@ namespace DYear {
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
             pManager.Register_StringParam("Key", "Key", "The key associated with the y-axis", GH_ParamAccess.item);
-            pManager.Register_IntervalParam("Domain", "Rng", "The domain associating values with the graph height.  In effect, sets the vertical scale of the graph.  Defaults to the Max and Min of given values.", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Scale", "Scl", "An interval that associates hour values with the graph height.  In effect, sets the vertical scale of the graph.  Defaults to the Max and Min of given values.", GH_ParamAccess.item);
             pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
             pManager.Register_2DIntervalParam("Graph Dimensions", "Dim", "The dimensions of the resulting graph", GH_ParamAccess.item);
             pManager.Register_DoubleParam("Bar Width", "BWdth", "The width of each bar, as a percentage of available area (0->1).  Defaults to 1.0", 1.0, GH_ParamAccess.item);
@@ -604,7 +604,6 @@ namespace DYear {
     }
 
 
-
     public class Dhr_DiurnalTimeValueGraphComponent : GH_Component {
         public Dhr_DiurnalTimeValueGraphComponent()
             //Call the base constructor
@@ -616,7 +615,7 @@ namespace DYear {
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.tree);
             pManager.Register_StringParam("Key", "Key", "The key associated with the y-axis", GH_ParamAccess.item);
-            pManager.Register_IntervalParam("Domain", "Rng", "The domain associating values with the graph height.  In effect, sets the vertical scale of the graph.  Defaults to the Max and Min of given values.", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Scale", "Scl", "An interval that associates hour values with the graph height.  In effect, sets the vertical scale of the graph.  Defaults to the Max and Min of given values.", GH_ParamAccess.item);
             pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
             pManager.Register_2DIntervalParam("Graph Dimensions", "Dim", "The dimensions of the resulting graph", GH_ParamAccess.item);
             pManager.Register_DoubleParam("Subgraph Width", "Wid", "The width of each diurnal subgraph, as a percentage of available area (0->1).  Defaults to 1.0", 1.0, GH_ParamAccess.item);
@@ -708,5 +707,142 @@ namespace DYear {
 
     }
 
+
+    public class Dhr_RadialGraphComponent : GH_Component
+    {
+        public Dhr_RadialGraphComponent()
+            //Call the base constructor
+            : base("Radial Value-Value Spatialization", "RadialValVal", "Assigns a position on a Radial Value-Value Graphs (like a radar plot or wind rose) for each hour given.", "DYear", "Spatialize") { }
+        public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.tertiary; } }
+        public override Guid ComponentGuid { get { return new Guid("{D33CA97B-223A-4E9C-ACB3-42365D176AD7}"); } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
+        {
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
+            pManager.Register_StringParam("Radius Key", "KeyR", "The key associated with the angular dimension of the graph.", GH_ParamAccess.item);
+            pManager.Register_StringParam("Angle Key", "KeyA", "The key associated with the radial dimension of the graph.", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Radius Scale", "SclR", "An interval that associates hour values with the graph radius.  In effect, sets the radial scale of the graph.  Defaults to the Max and Min of given values.", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Angle Scale", "SclA", "An interval that associates hour values with the graph angle.  In effect, sets the angular scale of the graph.  Defaults to 0->360.",new Interval(0,360), GH_ParamAccess.item);
+            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph.  Note an angular value of zero will align with the x-axis of this plane.", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Graph Radii", "Rad", "An interval that sets the inner and outer radii of the resulting graph.  Defaults to 1.0->3.0", new Interval(1.0,3.0), GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Subdivisions", "Divs", "An interval of two integer numbers that describe the number of subregions desired.  The first number corresponds to radius divisions, and the second to angular divisions.", new Interval(4, 3), GH_ParamAccess.item);
+
+            this.Params.Input[3].Optional = true;
+            this.Params.Input[5].Optional = true;
+            this.Params.Input[6].Optional = true;
+        }
+
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
+        {
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.tree);
+            pManager.Register_PointParam("Positions", "Pts", "The assigned positions of the hours", GH_ParamAccess.tree);
+            pManager.Register_CurveParam("Regions", "Rgns", "Regions that subdivide the resulting graph.  Useful in conjunction with HourFreq2 component.", GH_ParamAccess.tree);
+        }
+
+        protected override void SolveInstance(IGH_DataAccess DA)
+        {
+            List<DHr> hours = new List<DHr>();
+            String key_r = "";
+            String key_a = "";
+            if (DA.GetDataList(0, hours) && DA.GetData(1, ref key_r) && DA.GetData(2, ref key_a))
+            {
+
+                Interval ival_r = new Interval();
+                Interval ival_a = new Interval();
+                float[] vals_r = new float[0];
+                float[] vals_a = new float[0];
+
+                if (!(DA.GetData(3, ref ival_r))) DHr.get_domain(key_r, hours.ToArray(), ref vals_r, ref ival_r);
+                else
+                {
+                    ival_r = new Interval(hours[0].val(key_r), hours[0].val(key_r));
+                    vals_r = new float[hours.Count];
+                    for (int h = 0; h < hours.Count; h++)
+                    {
+                        vals_r[h] = hours[h].val(key_r);
+                        if (vals_r[h] < ival_r.T0) ival_r.T0 = vals_r[h];
+                        if (vals_r[h] > ival_r.T1) ival_r.T1 = vals_r[h];
+                    }
+                }
+
+                DHr.get_domain(key_a, hours.ToArray(), ref vals_a, ref ival_a);
+                DA.GetData(4, ref ival_a);
+
+                Plane plane = new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1));
+                DA.GetData(5, ref plane);
+
+                Interval ival_gr = new Interval();
+                Interval ival_ga = new Interval(0,Math.PI*2);
+                DA.GetData(6, ref ival_gr);
+
+                Interval subdivs = new Interval();
+                DA.GetData(7, ref subdivs);
+                int subdivs_r = (int)Math.Floor(subdivs.T0);
+                int subdivs_a = (int)Math.Floor(subdivs.T1);
+
+                List<Point3d> points = new List<Point3d>();
+                for (int h = 0; h < hours.Count; h++)
+                {
+                    double radius = ival_gr.ParameterAt(ival_r.NormalizedParameterAt( vals_r[h] ));
+                    double theta = ival_a.NormalizedParameterAt(vals_a[h]) * Math.PI * 2;
+                    Point3d gpt = PointByCylCoords(radius, theta); // a point in graph coordinates
+                    hours[h].pos = gpt; // the hour records the point in graph coordinates
+
+                    Point3d wpt = plane.PointAt(gpt.X, gpt.Y);
+                    points.Add(wpt);  // adds this point in world coordinates
+                }
+
+                Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Curve> regions = new Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Curve>();
+
+                int segments_in_whole_circle = 36;
+                //double step_r = ival_r.Length / subdivs_r;
+                //double step_a = Math.PI*2 / subdivs_a;
+
+                for (int r = 0; r < subdivs_r; r++) 
+                    for (int a = 0; a < subdivs_a; a++)
+                    {
+                        Interval rad = new Interval(ival_gr.ParameterAt(r / (float)subdivs_r), ival_gr.ParameterAt((r+1) / (float)subdivs_r));
+                        Interval ang = new Interval(ival_ga.ParameterAt(a / (float)subdivs_a), ival_ga.ParameterAt((a + 1) / (float)subdivs_a));
+
+                        int cnt = (int)Math.Ceiling(segments_in_whole_circle * ang.Length / Math.PI * 2);
+                        Polyline pcrv = new Polyline();
+                        pcrv.AddRange(FakeArc(plane, rad.T0, ang.T0, ang.T1, cnt));
+                        pcrv.AddRange(FakeArc(plane, rad.T1, ang.T1, ang.T0, cnt));
+                        pcrv.Add(pcrv[0]);
+
+                        Grasshopper.Kernel.Types.GH_Curve gh_curve = new Grasshopper.Kernel.Types.GH_Curve();
+                        Grasshopper.Kernel.GH_Convert.ToGHCurve(pcrv, GH_Conversion.Both, ref gh_curve);
+                        regions.Append(gh_curve, new Grasshopper.Kernel.Data.GH_Path(new int[]{r,a}) );
+                    }
+
+
+                DA.SetDataList(0, hours);
+                DA.SetDataList(1, points);
+                DA.SetDataTree(2, regions);
+
+            }
+        }
+
+        private static Point3d PointByCylCoords(double r, double t)
+        {
+            return new Point3d(r * Math.Cos(t), r * Math.Sin(t), 0);
+        }
+
+        private static Point3d[] FakeArc(Plane plane, double r, double t0, double t1, int count)
+        {
+            Point3d[] parr = new Point3d[count];
+            double step = ((t1 - t0) / (count-1));
+            for (int n = 0; n < count; n++)
+            {
+                double t = t0 + n * step;
+                Point3d pt = PointByCylCoords(r, t);
+                parr[n] = plane.PointAt(pt.X, pt.Y);
+
+            }
+            return parr;
+        }
+
+    }
 
 }
