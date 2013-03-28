@@ -16,6 +16,7 @@ namespace DYear {
         internal int m_hr; //hour of year
         public Point3d pos;
         public Color color;
+        public bool is_surrogate; // does this hour stand in for a collection of hours?  set to 'true' when returning averaged data.
         public static float INVALID_VAL = 99999.99f;
 
         public MDHr() {
@@ -23,12 +24,14 @@ namespace DYear {
             m_hr = -1;
             pos = new Point3d();
             color = Color.FromArgb(0, 0, 0);
+            is_surrogate = false;
         }
         public MDHr(MDHr t) {
             this.m_hr = t.m_hr;
             this.m_vals = new Dictionary<string, float>(t.m_vals);
             pos = new Point3d(t.pos.X, t.pos.Y, t.pos.Z);
             color = Color.FromArgb(t.color.A, t.color.R, t.color.G, t.color.B);
+            is_surrogate = t.is_surrogate;
         }
         public MDHr(int hr)
             : this() {
@@ -36,6 +39,7 @@ namespace DYear {
             this.m_vals = new Dictionary<string, float>();
             pos = new Point3d();
             color = Color.FromArgb(0, 0, 0);
+            is_surrogate = false;
         }
         public DateTime dt {
             get { return Util.datetimeFromHourOfYear(this.m_hr); }
@@ -111,6 +115,11 @@ namespace DYear {
             set { Value.color = value; }
         }
 
+        public bool is_surrogate {
+            get { return Value.is_surrogate; }
+            set { Value.is_surrogate = value; }
+        }
+
         public float val(string key) { return Value.m_vals[key]; }
         public void put(string key, float val) { Value.m_vals[DHr.cleankey(key)] = val; }
         public void put_plus(string key, float val) { Value.m_vals[key] = Value.m_vals[key] + val; }
@@ -178,6 +187,7 @@ namespace DYear {
         public override object ScriptVariable() { return new DHr(this); }
         public override string ToString() {
             string datestring = this.dt.ToString("MMMdd h") + this.dt.ToString(" t").ToLowerInvariant().Trim();
+            if (is_surrogate) datestring = "SURROGATE @ " + datestring;
             return string.Format("[{1} {2} keys] {0}", datestring, hr.ToString("0000"), keys.Length);
         }
         public override string TypeDescription { get { return "Represents a Data Hour"; } }
@@ -186,16 +196,37 @@ namespace DYear {
 
         public override bool Write(GH_IO.Serialization.GH_IWriter writer) {
             writer.SetString("hr", hr.ToString());
+
+            writer.SetString("color_r", color.R.ToString());
+            writer.SetString("color_g", color.G.ToString());
+            writer.SetString("color_b", color.B.ToString());
+            writer.SetString("color_a", color.A.ToString());
+
+            writer.SetString("pos_x", pos_x.ToString());
+            writer.SetString("pos_y", pos_y.ToString());
+            writer.SetString("pos_z", pos_z.ToString());
+
+            writer.SetString("is_surrogate", is_surrogate.ToString());
+
             writer.SetString("keys", string.Join(",", keys));
             writer.SetString("values", string.Join(",", values_as_strings()));
             return base.Write(writer);
         }
         public override bool Read(GH_IO.Serialization.GH_IReader reader) {
-            string hrstring = "";
-            if (!reader.TryGetString("hr", ref hrstring)) return false;
-            int h = -1;
-            if (!int.TryParse(hrstring, out h)) return false;
-            hr = h;
+            int h = ReadInt(reader, "hr"); if (h == -99999) return false; else hr = h;
+
+            bool color_good = true;
+            int cr = ReadInt(reader, "color_r"); if ((cr < 0)||(cr>255)) color_good =  false;
+            int cg = ReadInt(reader, "color_g"); if ((cg < 0) || (cg > 255)) color_good = false;
+            int cb = ReadInt(reader, "color_b"); if ((cb < 0) || (cb > 255)) color_good = false;
+            int ca = ReadInt(reader, "color_a"); if ((ca < 0) || (ca > 255)) color_good = false;
+            if (color_good) color = Color.FromArgb(ca, cr, cg, cb);
+
+            bool point_good = true;
+            double px = ReadDouble(reader, "pos_x"); if (px == -999.99) point_good = false;
+            double py = ReadDouble(reader, "pos_y"); if (py == -999.99) point_good = false;
+            double pz = ReadDouble(reader, "pos_z"); if (pz == -999.99) point_good = false;
+            if (point_good) pos = new Point3d(px, py, pz);
 
             string keystring = "";
             string valstring = "";
@@ -209,6 +240,22 @@ namespace DYear {
                 return false;
             }
             return base.Read(reader);
+        }
+
+        private static int ReadInt(GH_IO.Serialization.GH_IReader reader, string key) {
+            string str = "";
+            int ret = -99999;
+            if (!reader.TryGetString(key, ref str)) return -99999;
+            if (!int.TryParse(str, out ret)) return -99999;
+            return ret;
+        }
+
+        private static double ReadDouble(GH_IO.Serialization.GH_IReader reader, string key) {
+            string str = "";
+            double ret = -999.99;
+            if (!reader.TryGetString(key, ref str)) return -999.99;
+            if (!double.TryParse(str, out ret)) return -999.99;
+            return ret;
         }
 
         #endregion
@@ -236,6 +283,7 @@ namespace DYear {
         public int hours_vol;
         public List<string> keys_vol;
         public List<string> okeys_vol;
+        public bool contains_surrogates;
 
         public bool has_persistent_data {
             get { return this.PersistentDataCount > 0; }
@@ -266,6 +314,7 @@ namespace DYear {
             hours_vol = 0;
             keys_vol = new List<string>();
             okeys_vol = new List<string>();
+            contains_surrogates = false;
 
             List<string> allKeys = new List<string>();
             List<DHr> data = ContainedHrs();
@@ -273,6 +322,7 @@ namespace DYear {
                 if (hr.IsValid) {
                     foreach (string key in hr.keys) { if (!allKeys.Contains(key)) { allKeys.Add(key); } }
                     hours_vol++;
+                    if (hr.is_surrogate) contains_surrogates = true;
                 } else {
                     this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Invalid Dhr found at index" + n);
                 }
@@ -303,6 +353,8 @@ namespace DYear {
 
         public override void AppendAdditionalMenuItems(ToolStripDropDown menu) {
             //base.AppendAdditionalMenuItems(menu);
+
+            Menu_AppendFlattenParameter(menu);
 
             Menu_AppendWireDisplay(menu);
             Menu_AppendDisconnectWires(menu);
@@ -359,6 +411,8 @@ namespace DYear {
     public class GHParam_DHr_Attributes : GH_Attributes<GHParam_DHr> {
         public GHParam_DHr_Attributes(GHParam_DHr owner) : base(owner) { }
 
+        int xtra_height = 17;
+
         protected override void Layout() {
             // Compute the width of the NickName of the owner (plus some extra padding), 
             // then make sure we have at least 100 pixels.
@@ -367,7 +421,8 @@ namespace DYear {
 
             // The height of our object is always 100
             int height = 50;
-            if (Owner.has_persistent_data) height = 67;
+            if (Owner.has_persistent_data) height = height + xtra_height;
+            if (Owner.contains_surrogates) height = height + xtra_height;
 
             // Assign the width and height to the Bounds property.
             // Also, make sure the Bounds are anchored to the Pivot
@@ -389,7 +444,7 @@ namespace DYear {
             if (channel == GH_CanvasChannel.Objects) {
                 // Define the default palette.
                 GH_Palette palette = GH_Palette.Normal;
-
+                
 
                 // Adjust palette based on the Owner's worst case messaging level.
                 switch (Owner.RuntimeMessageLevel) {
@@ -404,6 +459,7 @@ namespace DYear {
 
                 // Create a new Capsule without text or icon.
                 RectangleF capBounds = new RectangleF(Pivot, new SizeF(Bounds.Width, 50));
+                if (Owner.contains_surrogates) capBounds = new RectangleF(new PointF(Pivot.X, Pivot.Y + xtra_height), new SizeF(Bounds.Width, 50));
                 GH_Capsule capsule = GH_Capsule.CreateCapsule(capBounds, palette);
 
                 capsule = GH_Capsule.CreateCapsule(capBounds, palette);
@@ -428,7 +484,7 @@ namespace DYear {
 
                 // Our entire capsule is 60 pixels high, and we'll draw 
                 // three lines of text, each 20 pixels high.
-                RectangleF textRectangle = Bounds;
+                RectangleF textRectangle = capBounds;
                 textRectangle.Height = 15;
 
                 // Draw the NickName in a Standard Grasshopper font.
@@ -462,6 +518,22 @@ namespace DYear {
                     tcap = null;
                 }
 
+                if (Owner.contains_surrogates) {
+
+                    RectangleF xtraBounds;
+                    //if (Owner.has_persistent_data) xtraBounds = new RectangleF(new PointF(capBounds.Location.X, capBounds.Location.Y + 67), new SizeF(Bounds.Width, 15));
+                    //else xtraBounds = new RectangleF(new PointF(capBounds.Location.X, capBounds.Location.Y + 52), new SizeF(Bounds.Width, 15));
+                    xtraBounds = new RectangleF(new PointF(capBounds.Location.X, capBounds.Location.Y - 17), new SizeF(Bounds.Width, 15)); 
+                    RectangleF xTextRectangle = xtraBounds;
+
+                    palette = GH_Palette.Transparent;
+                    GH_Capsule tcap = GH_Capsule.CreateTextCapsule(xtraBounds, xTextRectangle, palette, "SURROGATE DHRS");
+                    tcap.Font = GH_FontServer.Small;
+
+                    tcap.Render(graphics, Selected, Owner.Locked, true);
+                    tcap.Dispose(); // Always dispose of a GH_Capsule when you're done with it.
+                    tcap = null;
+                }
                 // Always dispose of any GDI+ object that implement IDisposable.
                 format.Dispose();
             }
@@ -497,15 +569,15 @@ namespace DYear {
 
                 if (hrs.Count != valtree.Branches.Count) this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "List matching error.  Hours and Vals must match.  If you pass in more than one hour number, then you must pass in a tree of values with one branch per hour number, and vice-versa.");
                 else foreach (List<GH_Number> branch in valtree.Branches) if (keys.Count != branch.Count) this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "List matching error.  Keys and Vals must offer lists of the same length.  If you pass in a tree of values, each branch must contain a list of the same length as the list of keys.");
-                else {
-                    List<DHr> hours = new List<DHr>();
-                    for (int n = 0; n < valtree.Branches.Count; n++) {
-                        DHr hr = new DHr(hrs[n]);
-                        for (int m = 0; m < keys.Count; m++) hr.put(keys[m], (float)valtree.Branches[n][m].Value);
-                        hours.Add(hr);
-                    }
-                    DA.SetDataList(0, hours);
-                }
+                        else {
+                            List<DHr> hours = new List<DHr>();
+                            for (int n = 0; n < valtree.Branches.Count; n++) {
+                                DHr hr = new DHr(hrs[n]);
+                                for (int m = 0; m < keys.Count; m++) hr.put(keys[m], (float)valtree.Branches[n][m].Value);
+                                hours.Add(hr);
+                            }
+                            DA.SetDataList(0, hours);
+                        }
             }
         }
 

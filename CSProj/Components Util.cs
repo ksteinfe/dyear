@@ -263,7 +263,7 @@ namespace DYear {
     public class Dhr_PeriodStatsComponent : GH_Component {
 
         public CType cycle_type;
-        public enum CType { Yearly, Monthly, MonthlyDiurnal, WeeklyDiurnal, Daily, Invalid };
+        public enum CType { Yearly, Monthly, MonthlyDiurnal, Weekly, WeeklyDiurnal, Daily, Invalid };
 
         public Dhr_PeriodStatsComponent()
             //Call the base constructor
@@ -275,18 +275,18 @@ namespace DYear {
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             GHParam_DHr param = new GHParam_DHr();
             pManager.RegisterParam(param, "DHours", "Dhrs", "The Dhours from which to calculate statistics", GH_ParamAccess.list);
-            pManager.Register_StringParam("Period", "P", "The time period to cycle through.  Choose 'yearly', 'monthly', 'monthly diurnal', 'weekly diurnal', or 'daily'.");
+            pManager.Register_StringParam("Period", "P", "The time period to cycle through.  Choose 'yearly', 'monthly', 'monthly diurnal', 'weekly', 'weekly diurnal', or 'daily'.");
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "Mean Hours", "Mean", "Hours that represent the mean (average) values of all hours in the selected time cycle", GH_ParamAccess.list);
-            pManager.RegisterParam(new GHParam_DHr(), "Mode Hours", "Mode", "Hours that represent the mode (most frequent) values of all hours in the selected time cycle", GH_ParamAccess.list);
-            pManager.RegisterParam(new GHParam_DHr(), "High Hours", "Q4", "Hours that represent the highest values of all hours in the selected time cycle", GH_ParamAccess.list);
-            pManager.RegisterParam(new GHParam_DHr(), "Upper Quantile Hours", "Q3", "Hours that represent the upper quantile (0.75) values of all hours in the selected time cycle", GH_ParamAccess.list);
-            pManager.RegisterParam(new GHParam_DHr(), "Median Hours", "Q2", "Hours that represent the median values of all hours in the selected time cycle", GH_ParamAccess.list);
-            pManager.RegisterParam(new GHParam_DHr(), "Lower Quantile Hours", "Q1", "Hours that represent the lower quantile (0.25) values of all hours in the selected time cycle", GH_ParamAccess.list);
-            pManager.RegisterParam(new GHParam_DHr(), "Low Hours", "Q0", "Hours that represent the lowest values of all hours in the selected time cycle", GH_ParamAccess.list);
-            pManager.RegisterParam(new GHParam_DHr(), "Sum Hours", "Sum", "Hours that represent the summation of the values of all hours in the selected time cycle", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Mean Hours", "Mean", "Hours that represent the mean (average) values of all hours in the selected time cycle", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "Mode Hours", "Mode", "Hours that represent the mode (most frequent) values of all hours in the selected time cycle", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "High Hours", "Q4", "Hours that represent the highest values of all hours in the selected time cycle", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "Upper Quantile Hours", "Q3", "Hours that represent the upper quantile (0.75) values of all hours in the selected time cycle", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "Median Hours", "Q2", "Hours that represent the median values of all hours in the selected time cycle", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "Lower Quantile Hours", "Q1", "Hours that represent the lower quantile (0.25) values of all hours in the selected time cycle", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "Low Hours", "Q0", "Hours that represent the lowest values of all hours in the selected time cycle", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "Sum Hours", "Sum", "Hours that represent the summation of the values of all hours in the selected time cycle", GH_ParamAccess.tree);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA) {
@@ -296,90 +296,165 @@ namespace DYear {
                 if (period_string == "") { return; }
                 period_string = period_string.ToLowerInvariant().Trim();
                 this.cycle_type = CType.Invalid;
-                if (period_string.Contains("year")) { this.cycle_type = CType.Yearly; } else if (period_string.Contains("monthly diurnal")) { this.cycle_type = CType.MonthlyDiurnal; } else if (period_string.Contains("month")) { this.cycle_type = CType.Monthly; } else if (period_string.Contains("day") || period_string.Contains("daily")) { this.cycle_type = CType.Daily; } else if (period_string.Contains("weekly")) { this.cycle_type = CType.WeeklyDiurnal; }
+                if (period_string.Contains("year")) { this.cycle_type = CType.Yearly; } else if (period_string.Contains("monthly diurnal")) { this.cycle_type = CType.MonthlyDiurnal; } else if (period_string.Contains("month")) { this.cycle_type = CType.Monthly; } else if (period_string.Contains("day") || period_string.Contains("daily")) { this.cycle_type = CType.Daily; } else if (period_string.Contains("weekly diurnal")) { this.cycle_type = CType.WeeklyDiurnal; } else if (period_string.Contains("weekly")) { this.cycle_type = CType.Weekly; } else {
+                    this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "I don't understand the time period you're looking for.\nPlease choose 'yearly', 'monthly', 'monthly diurnal', 'weekly', 'weekly diurnal', or 'daily'.");
+                }
+
 
                 string[] commonKeys = DHr.commonkeys(dhrs.ToArray());
                 Dictionary<string, List<DHr>> stat_hours = new Dictionary<string, List<DHr>>();
-                stat_hours.Add("meanHrs", new List<DHr>());
-                stat_hours.Add("modeHrs", new List<DHr>());
-                stat_hours.Add("highHrs", new List<DHr>());
-                stat_hours.Add("uqHrs", new List<DHr>());
-                stat_hours.Add("medianHrs", new List<DHr>());
-                stat_hours.Add("lqHrs", new List<DHr>());
-                stat_hours.Add("lowHrs", new List<DHr>());
-                stat_hours.Add("sumHrs", new List<DHr>());
+                InitStatHours(ref stat_hours);
 
                 HourMask mask = new HourMask();
 
                 switch (this.cycle_type) {
-                    case CType.Monthly:
-                        for (int mth = 0; mth < 12; mth++) {
-                            mask.maskByMonthOfYear(mth);
-                            CalculateStats(dhrs, commonKeys, stat_hours, mask, true);
-                        }
-                        break;
 
                     case CType.MonthlyDiurnal:
-                        for (int mth = 0; mth < 12; mth++) for (int hour = 0; hour < 24; hour++) {
-                                mask.maskByMonthAndHour(mth, hour);
-                                CalculateStats(dhrs, commonKeys, stat_hours, mask, true);
-                            }
+                    case CType.WeeklyDiurnal:
+                        Grasshopper.Kernel.Data.GH_Structure<DHr> meanTree = new Grasshopper.Kernel.Data.GH_Structure<DHr>();
+                        Grasshopper.Kernel.Data.GH_Structure<DHr> modeTree = new Grasshopper.Kernel.Data.GH_Structure<DHr>();
+                        Grasshopper.Kernel.Data.GH_Structure<DHr> highTree = new Grasshopper.Kernel.Data.GH_Structure<DHr>();
+                        Grasshopper.Kernel.Data.GH_Structure<DHr> uqTree = new Grasshopper.Kernel.Data.GH_Structure<DHr>();
+                        Grasshopper.Kernel.Data.GH_Structure<DHr> medianTree = new Grasshopper.Kernel.Data.GH_Structure<DHr>();
+                        Grasshopper.Kernel.Data.GH_Structure<DHr> lqTree = new Grasshopper.Kernel.Data.GH_Structure<DHr>();
+                        Grasshopper.Kernel.Data.GH_Structure<DHr> lowTree = new Grasshopper.Kernel.Data.GH_Structure<DHr>();
+                        Grasshopper.Kernel.Data.GH_Structure<DHr> sumTree = new Grasshopper.Kernel.Data.GH_Structure<DHr>();
+
+                        switch (this.cycle_type) {
+                            case CType.MonthlyDiurnal:
+                                for (int mth = 0; mth < 12; mth++) {
+                                    InitStatHours(ref stat_hours);
+                                    for (int hour = 0; hour < 24; hour++) {
+                                        mask.maskByMonthAndHour(mth, hour);
+                                        int hh = Util.hourOfYearFromDatetime(Util.baseDatetime().AddMonths(mth).AddHours(hour)) + 1; // had to add one, looks like Util function was designed for parsing non-zero-indexed hours
+                                        CalculateStats(dhrs, commonKeys, stat_hours, mask, hh, true);
+                                    }
+                                    meanTree.AppendRange(stat_hours["meanHrs"], new Grasshopper.Kernel.Data.GH_Path(mth));
+                                    modeTree.AppendRange(stat_hours["modeHrs"], new Grasshopper.Kernel.Data.GH_Path(mth));
+                                    highTree.AppendRange(stat_hours["highHrs"], new Grasshopper.Kernel.Data.GH_Path(mth));
+                                    uqTree.AppendRange(stat_hours["uqHrs"], new Grasshopper.Kernel.Data.GH_Path(mth));
+                                    medianTree.AppendRange(stat_hours["medianHrs"], new Grasshopper.Kernel.Data.GH_Path(mth));
+                                    lqTree.AppendRange(stat_hours["lqHrs"], new Grasshopper.Kernel.Data.GH_Path(mth));
+                                    lowTree.AppendRange(stat_hours["lowHrs"], new Grasshopper.Kernel.Data.GH_Path(mth));
+                                    sumTree.AppendRange(stat_hours["sumHrs"], new Grasshopper.Kernel.Data.GH_Path(mth));
+                                }
+                                break;
+                            case CType.WeeklyDiurnal:
+                                for (int wk = 0; wk < 52; wk++) {
+                                    InitStatHours(ref stat_hours);
+                                    for (int hour = 0; hour < 24; hour++) {
+                                        mask.maskByWeekAndHour(wk, hour);
+                                        int hh = Util.hourOfYearFromDatetime(Util.baseDatetime().AddDays(wk * 7).AddHours(hour)) + 1; // had to add one, looks like Util function was designed for parsing non-zero-indexed hours
+                                        CalculateStats(dhrs, commonKeys, stat_hours, mask, hh, true);
+                                    }
+                                    meanTree.AppendRange(stat_hours["meanHrs"], new Grasshopper.Kernel.Data.GH_Path(wk));
+                                    modeTree.AppendRange(stat_hours["modeHrs"], new Grasshopper.Kernel.Data.GH_Path(wk));
+                                    highTree.AppendRange(stat_hours["highHrs"], new Grasshopper.Kernel.Data.GH_Path(wk));
+                                    uqTree.AppendRange(stat_hours["uqHrs"], new Grasshopper.Kernel.Data.GH_Path(wk));
+                                    medianTree.AppendRange(stat_hours["medianHrs"], new Grasshopper.Kernel.Data.GH_Path(wk));
+                                    lqTree.AppendRange(stat_hours["lqHrs"], new Grasshopper.Kernel.Data.GH_Path(wk));
+                                    lowTree.AppendRange(stat_hours["lowHrs"], new Grasshopper.Kernel.Data.GH_Path(wk));
+                                    sumTree.AppendRange(stat_hours["sumHrs"], new Grasshopper.Kernel.Data.GH_Path(wk));
+                                }
+                                break;
+                        }
+                        DA.SetDataTree(0, meanTree);
+                        DA.SetDataTree(1, modeTree);
+                        DA.SetDataTree(2, highTree);
+                        DA.SetDataTree(3, uqTree);
+                        DA.SetDataTree(4, medianTree);
+                        DA.SetDataTree(5, lqTree);
+                        DA.SetDataTree(6, lowTree);
+                        DA.SetDataTree(7, sumTree);
                         break;
 
-                    case CType.WeeklyDiurnal:
-                        for (int wk = 0; wk < 52; wk++) for (int hour = 0; hour < 24; hour++) {
-                                mask.maskByWeekAndHour(wk, hour);
-                                CalculateStats(dhrs, commonKeys, stat_hours, mask, true);
-                            }
-                        break;
 
                     case CType.Daily:
                         for (int day = 0; day < 365; day++) {
                             mask.maskByDayOfYear(day, day); // passing in same day twice masks to this single day
-                            CalculateStats(dhrs, commonKeys, stat_hours, mask, true);
+                            int hh = Util.hourOfYearFromDatetime(Util.baseDatetime().AddDays(day).AddHours(0)) + 1; // had to add one, looks like Util function was designed for parsing non-zero-indexed hours
+                            CalculateStats(dhrs, commonKeys, stat_hours, mask, hh, true);
                         }
+                        SetOutputData(DA, stat_hours);
                         break;
+
+                    case CType.Weekly:
+                        for (int wk = 0; wk < 52; wk++) {
+                            mask.maskByWeek(wk);
+                            int hh = Util.hourOfYearFromDatetime(Util.baseDatetime().AddDays(wk * 7).AddHours(0)) + 1; // had to add one, looks like Util function was designed for parsing non-zero-indexed hours
+                            CalculateStats(dhrs, commonKeys, stat_hours, mask, hh, true);
+                        }
+                        SetOutputData(DA, stat_hours);
+                        break;
+
+                    case CType.Monthly:
+                        for (int mth = 0; mth < 12; mth++) {
+                            mask.maskByMonthOfYear(mth);
+                            int hh = Util.hourOfYearFromDatetime(Util.baseDatetime().AddMonths(mth).AddHours(0)) + 1; // had to add one, looks like Util function was designed for parsing non-zero-indexed hours
+                            CalculateStats(dhrs, commonKeys, stat_hours, mask, hh, true);
+                        }
+                        SetOutputData(DA, stat_hours);
+                        break;
+
+
                     case CType.Yearly:
                         mask.fillMask(true); // all hours may pass
-                        CalculateStats(dhrs, commonKeys, stat_hours, mask, true);
+                        int hhh = Util.hourOfYearFromDatetime(Util.baseDatetime().AddMonths(6).AddDays(15).AddHours(0)) + 1; // had to add one, looks like Util function was designed for parsing non-zero-indexed hours
+                        CalculateStats(dhrs, commonKeys, stat_hours, mask, hhh, true);
+                        SetOutputData(DA, stat_hours);
                         break;
                     default:
                         this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Time period option not yet implimented.  Cannot produce statistics.");
                         break;
                 }
 
-                DA.SetDataList(0, stat_hours["meanHrs"]);
-                DA.SetDataList(1, stat_hours["modeHrs"]);
-                DA.SetDataList(2, stat_hours["highHrs"]);
-                DA.SetDataList(3, stat_hours["uqHrs"]);
-                DA.SetDataList(4, stat_hours["medianHrs"]);
-                DA.SetDataList(5, stat_hours["lqHrs"]);
-                DA.SetDataList(6, stat_hours["lowHrs"]);
-                DA.SetDataList(7, stat_hours["sumHrs"]);
+
             }
         }
 
-        private void CalculateStats(List<DHr> dhrs, string[] keys, Dictionary<string, List<DHr>> stat_hours_dict, HourMask mask, bool calculate_mode = false) {
+        private static void InitStatHours(ref Dictionary<string, List<DHr>> stat_hours) {
+            stat_hours.Clear();
+            stat_hours.Add("meanHrs", new List<DHr>());
+            stat_hours.Add("modeHrs", new List<DHr>());
+            stat_hours.Add("highHrs", new List<DHr>());
+            stat_hours.Add("uqHrs", new List<DHr>());
+            stat_hours.Add("medianHrs", new List<DHr>());
+            stat_hours.Add("lqHrs", new List<DHr>());
+            stat_hours.Add("lowHrs", new List<DHr>());
+            stat_hours.Add("sumHrs", new List<DHr>());
+        }
+
+
+
+        private static void SetOutputData(IGH_DataAccess DA, Dictionary<string, List<DHr>> stat_hours) {
+            DA.SetDataList(0, stat_hours["meanHrs"]);
+            DA.SetDataList(1, stat_hours["modeHrs"]);
+            DA.SetDataList(2, stat_hours["highHrs"]);
+            DA.SetDataList(3, stat_hours["uqHrs"]);
+            DA.SetDataList(4, stat_hours["medianHrs"]);
+            DA.SetDataList(5, stat_hours["lqHrs"]);
+            DA.SetDataList(6, stat_hours["lowHrs"]);
+            DA.SetDataList(7, stat_hours["sumHrs"]);
+        }
+
+        private void CalculateStats(List<DHr> dhrs, string[] keys, Dictionary<string, List<DHr>> stat_hours_dict, HourMask mask, int assigned_hour_of_year, bool calculate_mode = false) {
             Dictionary<string, List<float>> value_dict = new Dictionary<string, List<float>>();
             foreach (string key in keys) { value_dict.Add(key, new List<float>()); }
-            int average_hour_of_year = 0;
             int count = 0;
             foreach (DHr hour in dhrs) {
                 if (mask.eval(hour)) {
                     count++;
-                    average_hour_of_year += hour.hr;
                     foreach (string key in keys) { value_dict[key].Add(hour.val(key)); }
                 }
             }
-            average_hour_of_year = average_hour_of_year / count;
-            DHr meanHr = new DHr(average_hour_of_year);
-            DHr modeHr = new DHr(average_hour_of_year);
-            DHr highHr = new DHr(average_hour_of_year);
-            DHr uqHr = new DHr(average_hour_of_year);
-            DHr medianHr = new DHr(average_hour_of_year);
-            DHr lqHr = new DHr(average_hour_of_year);
-            DHr lowHr = new DHr(average_hour_of_year);
-            DHr sumHr = new DHr(average_hour_of_year);
+            DHr meanHr = new DHr(assigned_hour_of_year); meanHr.is_surrogate = true;
+            DHr modeHr = new DHr(assigned_hour_of_year); modeHr.is_surrogate = true;
+            DHr highHr = new DHr(assigned_hour_of_year); highHr.is_surrogate = true;
+            DHr uqHr = new DHr(assigned_hour_of_year); uqHr.is_surrogate = true;
+            DHr medianHr = new DHr(assigned_hour_of_year); medianHr.is_surrogate = true;
+            DHr lqHr = new DHr(assigned_hour_of_year); lqHr.is_surrogate = true;
+            DHr lowHr = new DHr(assigned_hour_of_year); lowHr.is_surrogate = true;
+            DHr sumHr = new DHr(assigned_hour_of_year); sumHr.is_surrogate = true;
 
             if (calculate_mode) {
                 foreach (string key in keys) {
@@ -388,7 +463,7 @@ namespace DYear {
                     highHr.put(key, value_dict[key][value_dict[key].Count - 1]);
                     uqHr.put(key, value_dict[key].Quartile(0.75f));
                     medianHr.put(key, value_dict[key].Median());
-                    lqHr.put(key, value_dict[key].Quartile(0.75f));
+                    lqHr.put(key, value_dict[key].Quartile(0.25f));
                     lowHr.put(key, value_dict[key][0]);
                     sumHr.put(key, value_dict[key].Sum());
 
@@ -493,14 +568,14 @@ namespace DYear {
             int subdivs = 0;
             if ((DA.GetDataList(0, dhrs)) && (DA.GetData(1, ref key)) && (DA.GetData(3, ref subdivs))) {
                 Interval ival_overall = new Interval();
-                if (!DA.GetData(2, ref ival_overall)){
+                if (!DA.GetData(2, ref ival_overall)) {
                     // go thru the given hours and find the max and min value for the given key
                     ival_overall.T0 = MDHr.INVALID_VAL;
                     ival_overall.T1 = MDHr.INVALID_VAL;
                     foreach (DHr dhr in dhrs) {
                         float val = dhr.val(key);
-                        if ((ival_overall.T0==MDHr.INVALID_VAL)||(val <ival_overall.T0)) ival_overall.T0 = val;
-                        if ((ival_overall.T1==MDHr.INVALID_VAL)||(val >ival_overall.T1)) ival_overall.T1 = val;
+                        if ((ival_overall.T0 == MDHr.INVALID_VAL) || (val < ival_overall.T0)) ival_overall.T0 = val;
+                        if ((ival_overall.T1 == MDHr.INVALID_VAL) || (val > ival_overall.T1)) ival_overall.T1 = val;
                     }
                 }
 
@@ -544,6 +619,107 @@ namespace DYear {
         }
 
     }
+
+
+    public class Dhr_HourFreq2Component : GH_Component {
+        public Dhr_HourFreq2Component()
+            //Call the base constructor
+            : base("Hour Frequency Two", "HourFreq2", "", "DYear", "Filter") { }
+        public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary; } }
+        public override Guid ComponentGuid { get { return new Guid("{58ED367D-9315-4133-BBE9-FCCD452075CC}"); } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
+            pManager.Register_StringParam("Key U", "Key U", "The first key to count hours on", GH_ParamAccess.item);
+            pManager.Register_StringParam("Key U", "Key V", "The second key to count hours on", GH_ParamAccess.item);
+            pManager.Register_2DIntervalParam("UV Interval", "Ival2", "The overall two-dimensional interval to sample.  This interval will be subdivided into a number of subintervals.  Any values that fall outside of this iterval will be appended to the highest or lowest count", GH_ParamAccess.item);
+            pManager.Register_IntegerParam("Subdivisions U", "Div U", "The number of subintervals to divide the first interval into", 10, GH_ParamAccess.item);
+            pManager.Register_IntegerParam("Subdivisions V", "Div V", "The number of subintervals to divide the second interval into", 10, GH_ParamAccess.item);
+            this.Params.Input[3].Optional = true;
+        }
+
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
+            pManager.Register_IntegerParam("Frequencies", "Freqs", "A tree of frequencies describing the number of times an hour falls within a corresponding interval, returned below", GH_ParamAccess.tree);
+            pManager.Register_IntervalParam("Subintervals", "Ivals", "A tree of intervals, produced by subdividing the given interval, that describe ranges of values used to calculate the above frequencies", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "Hours that fall into the above subintervals", GH_ParamAccess.tree);
+        }
+
+        protected override void SolveInstance(IGH_DataAccess DA) {
+            List<DHr> dhrs = new List<DHr>();
+            string key_u = "";
+            string key_v = "";
+            int subdivs_u = 0;
+            int subdivs_v = 0;
+            if ((DA.GetDataList(0, dhrs)) && (DA.GetData(1, ref key_u)) && (DA.GetData(2, ref key_v)) && (DA.GetData(4, ref subdivs_u)) && (DA.GetData(5, ref subdivs_v))) {
+                Grasshopper.Kernel.Types.UVInterval ival_overall = new Grasshopper.Kernel.Types.UVInterval();
+                if (!DA.GetData(3, ref ival_overall)) {
+                    // go thru the given hours and find the max and min value for the given key
+                    Interval ival_temp_u = new Interval(MDHr.INVALID_VAL, MDHr.INVALID_VAL);
+                    Interval ival_temp_v = new Interval(MDHr.INVALID_VAL, MDHr.INVALID_VAL);
+                    foreach (DHr dhr in dhrs) {
+                        float val_u = dhr.val(key_u);
+                        float val_v = dhr.val(key_v);
+                        if ((ival_temp_u.T0 == MDHr.INVALID_VAL) || (val_u < ival_temp_u.T0)) ival_temp_u.T0 = val_u;
+                        if ((ival_temp_u.T1 == MDHr.INVALID_VAL) || (val_u > ival_temp_u.T1)) ival_temp_u.T1 = val_u;
+                        if ((ival_temp_v.T0 == MDHr.INVALID_VAL) || (val_v < ival_temp_v.T0)) ival_temp_v.T0 = val_v;
+                        if ((ival_temp_v.T1 == MDHr.INVALID_VAL) || (val_v > ival_temp_v.T1)) ival_temp_v.T1 = val_v;
+                    }
+                }
+
+                Grasshopper.Kernel.Data.GH_Structure<DHr> hrsOut = new Grasshopper.Kernel.Data.GH_Structure<DHr>();
+                Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Integer> freqOut = new Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Integer>();
+                Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Interval2D> ivalsOut = new Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Interval2D>();
+
+                if (ival_overall.U.IsDecreasing) ival_overall.U.Swap();
+                if (ival_overall.V.IsDecreasing) ival_overall.V.Swap();
+                double delta_u = ival_overall.U.Length / subdivs_u;
+                double delta_v = ival_overall.V.Length / subdivs_v;
+                for (int u = 0; u < subdivs_u; u++) {
+                    for (int v = 0; v < subdivs_v; v++) {
+                        Grasshopper.Kernel.Data.GH_Path path = new Grasshopper.Kernel.Data.GH_Path(new int[] { u, v });
+                        freqOut.EnsurePath(path);
+                        freqOut.Append(new Grasshopper.Kernel.Types.GH_Integer(0), path);
+                        ivalsOut.EnsurePath(path);
+                        Interval sub_u = new Interval(ival_overall.U.T0 + u * delta_u, ival_overall.U.T0 + ((u + 1) * delta_u));
+                        Interval sub_v = new Interval(ival_overall.V.T0 + v * delta_v, ival_overall.V.T0 + ((v + 1) * delta_v));
+                        Grasshopper.Kernel.Types.UVInterval sub_uv = new Grasshopper.Kernel.Types.UVInterval(sub_u, sub_v);
+                        Grasshopper.Kernel.Types.GH_Interval2D i2d = new Grasshopper.Kernel.Types.GH_Interval2D();
+                        i2d.Value = sub_uv;
+                        ivalsOut.Append(i2d, path);
+                    }
+                }
+                /*
+                foreach (DHr dhr in dhrs) {
+                    if (dhr.val(key) < ivalsOut[0].T0) {
+                        freqOut[0] = freqOut[0] + 1;
+                        continue;
+                    }
+                    if (dhr.val(key) > ivalsOut[ivalsOut.Count - 1].T1) {
+                        freqOut[freqOut.Count - 1] = freqOut[freqOut.Count - 1] + 1;
+                        continue;
+                    }
+                    int n = 0;
+                    foreach (Interval ival in ivalsOut) {
+                        Grasshopper.Kernel.Data.GH_Path path = new Grasshopper.Kernel.Data.GH_Path(n);
+                        hrsOut.EnsurePath(path);
+                        if (ival.IncludesParameter(dhr.val(key))) {
+                            freqOut[n] = freqOut[n] + 1;
+                            hrsOut.Append(dhr, path);
+                            break;
+                        }
+                        n++;
+                    }
+                }
+                 */
+                DA.SetDataTree(0, freqOut);
+                DA.SetDataTree(1, ivalsOut);
+                //DA.SetDataTree(2, hrsOut);
+            }
+        }
+
+    }
+
 
 
     public class Dhr_ExtremePeriodsComponent : GH_Component {

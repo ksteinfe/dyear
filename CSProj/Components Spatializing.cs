@@ -86,21 +86,21 @@ namespace DYear {
                 List<Point3d> points = new List<Point3d>();
 
                 Plane drawPlane = new Plane(plane);
-                if (this.plot_type == PType.Ortho) DA.SetData(4, new Rectangle3d(drawPlane,ival2d.U,ival2d.V)); // set the trimming boundary
+                if (this.plot_type == PType.Ortho) DA.SetData(4, new Rectangle3d(drawPlane, ival2d.U, ival2d.V)); // set the trimming boundary
                 if (this.plot_type == PType.Stereo) {
                     drawPlane.Origin = new Point3d(plane.Origin.X, plane.Origin.Y + ival2d.V.Mid, plane.Origin.Z);
                     drawPlane.Rotate(-Math.PI / 2, drawPlane.ZAxis);
-                    ival2d.V0 = ival2d.V.Length/2; // sets the radius of stereographic plots
+                    ival2d.V0 = ival2d.V.Length / 2; // sets the radius of stereographic plots
                     ival2d.V1 = 0.0;
 
-                    Circle circ = new Circle(drawPlane,Math.Abs(ival2d.V.Length));
-                    DA.SetData(4, circ ); // set the trimming boundary
+                    Circle circ = new Circle(drawPlane, Math.Abs(ival2d.V.Length));
+                    DA.SetData(4, circ); // set the trimming boundary
                 }
 
-                               
+
                 for (int h = 0; h < hours.Count; h++) {
-                    double x=0;
-                    double y=0;
+                    double x = 0;
+                    double y = 0;
                     switch (this.plot_type) {
                         case PType.Ortho:
                             x = ival2d.U.ParameterAt(azm_ival.NormalizedParameterAt(hours[h].val(azm_key)));
@@ -116,7 +116,7 @@ namespace DYear {
                     }
                     Point3d pt = drawPlane.PointAt(x, y);
                     points.Add(pt);
-                    hours[h].pos = pt;
+                    hours[h].pos = pt; // TODO: solar plots currently record the point in world space, switch to graph space
                 }
 
                 List<Polyline> plines = new List<Polyline>();
@@ -193,8 +193,8 @@ namespace DYear {
         }
 
         private bool hour_contains_day(List<DHr> hours, int h, string alt_key) {
- return ((hours[h].val(alt_key) >= 0) || ((h > 0) && (hours[h - 1].val(alt_key) >= 0)) || ((h < hours.Count - 1) && (hours[h + 1].val(alt_key) >= 0)));
-            
+            return ((hours[h].val(alt_key) >= 0) || ((h > 0) && (hours[h - 1].val(alt_key) >= 0)) || ((h < hours.Count - 1) && (hours[h + 1].val(alt_key) >= 0)));
+
         }
 
         private Mesh CreateColoredMesh(List<DHr> hours, List<Point3d> points, List<Polyline> plines, bool cull_night, String alt_key) {
@@ -202,7 +202,7 @@ namespace DYear {
 
             for (int h = 0; h < hours.Count; h++) {
                 //if (cull_night && ((hours[h].val(alt_key) < 0) && ((h > 0) && (hours[h - 1].val(alt_key) < 0)) && ((h < hours.Count - 1) && (hours[h + 1].val(alt_key) < 0)))) continue;
-                if (cull_night && !(hour_contains_day(hours,h, alt_key))) continue;
+                if (cull_night && !(hour_contains_day(hours, h, alt_key))) continue;
                 DHr this_hr = hours[h];
                 Polyline this_pl = plines[h];
 
@@ -328,7 +328,7 @@ namespace DYear {
                     float y = (float)((ival2d.V.ParameterAt((hours[h].hr % 24) / 24.0)) + delta_y2);
                     Point3d pt = plane.PointAt(x, y, 0);
                     points.Add(pt);
-                    hours[h].pos = pt;
+                    hours[h].pos = new Point3d(x, y, 0);
 
                     if (doMesh) {
                         mesh.Vertices.Add(pt);
@@ -433,7 +433,7 @@ namespace DYear {
 
                         double y = ival2d.V.ParameterAt((j + 0.5) / maxHourCount);
                         Point3d pt = plane.PointAt(x, y);
-                        dhour.pos = pt;
+                        dhour.pos = new Point3d(x, y, 0);
                         points.Append(new Grasshopper.Kernel.Types.GH_Point(pt), path);
                         hourTreeOut.Append(dhour, path);
 
@@ -523,6 +523,9 @@ namespace DYear {
             List<DHr> hours = new List<DHr>();
             String key = "";
             if (DA.GetDataList(0, hours) && DA.GetData(1, ref key)) {
+                if ((hours[0].is_surrogate) && ((hours.Count != 1) && (hours.Count != 12) && (hours.Count != 52) && (hours.Count != 365))) { this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "This component can only plot unmasked surrogate hours for yearly, monthly, weekly, and daily statistics"); } 
+
+
                 Interval ival_y = new Interval();
                 float[] vals = new float[0];
                 if (!(DA.GetData(2, ref ival_y))) DHr.get_domain(key, hours.ToArray(), ref vals, ref ival_y);
@@ -542,19 +545,43 @@ namespace DYear {
                     ival2d.V1 = 1.0;
                 }
 
+                double barWidth = 1.0;
+                DA.GetData(5, ref barWidth);
+
                 List<Point3d> points = new List<Point3d>();
                 List<Rectangle3d> rects = new List<Rectangle3d>();
-                double delta_x = Math.Abs(ival2d.U.Length) / 8760.0;
-                double delta_x2 = delta_x / 2.0;
+                //double delta_x = Math.Abs(ival2d.U.Length) / hours.Count;
+                //double delta_x2 = delta_x / 2.0;
 
                 for (int h = 0; h < hours.Count; h++) {
-                    double x = ival2d.U.ParameterAt(hours[h].hr / 8760.0) + delta_x2;
-                    double y = ival2d.V.ParameterAt(ival_y.NormalizedParameterAt(vals[h]));
-                    Point3d pt = plane.PointAt(x, y, 0);
-                    points.Add(pt);
-                    hours[h].pos = pt;
+                    Point3d gpt = GraphPoint(hours[h].hr, vals[h], plane, ival_y, ival2d); // returns a point in graph coordinates
+                    hours[h].pos = gpt; // the hour records the point in graph coordinates
 
-                    Rectangle3d rect = new Rectangle3d(new Plane(pt, new Vector3d(0, 0, 1)), new Interval(-delta_x2,delta_x2), new Interval(-y,0) );
+                    Point3d wpt = plane.PointAt(gpt.X, gpt.Y);
+                    points.Add(wpt); // adds this point in world coordinates
+
+                    Interval ival_gx; // interval of horz space occupied by this hour in graphic units
+                    Interval ival_gy = new Interval(ival2d.V0, gpt.Y); // interval of vertical space occupied by this hour in graphic units
+                    if (!hours[h].is_surrogate) {
+                        double delta_x2 = (Math.Abs(ival2d.U.Length) / 8760 / 2.0);
+                        ival_gx = new Interval(gpt.X - delta_x2, gpt.X + delta_x2); // interval of horz space occupied by this hour in graphic units
+                    } else {
+                        // if we've been passed surrogate hours, the spacing between bars may not be consistant
+                        // we assume we've been given an hour at the start of the range represented
+                        double ival_gx_0 = gpt.X;
+                        //if (h > 0) {
+                        //    Point3d pt_prev = GraphPoint(hours[h - 1].hr, vals[h - 1], plane, ival_y, ival2d);
+                        //    ival_gx_0 = gpt.X - (gpt.X - pt_prev.X) * barWidth;
+                        //} else { ival_gx_0 = gpt.X - (gpt.X - ival2d.U0) * barWidth; }
+                        double ival_gx_1;
+                        if (h < hours.Count - 1) {
+                            Point3d pt_next = GraphPoint(hours[h+1].hr, vals[h + 1], plane, ival_y, ival2d);
+                            ival_gx_1 = gpt.X + (pt_next.X - gpt.X) * barWidth;
+                        } else { ival_gx_1 = gpt.X + (ival2d.U1 - gpt.X) * barWidth; }
+                        ival_gx = new Interval(ival_gx_0, ival_gx_1);
+                        if (hours.Count == 1) ival_gx = ival2d.U;
+                    }
+                    Rectangle3d rect = new Rectangle3d(plane, ival_gx, ival_gy);
                     rects.Add(rect);
                 }
 
@@ -564,6 +591,119 @@ namespace DYear {
                 //DA.SetData(3, mesh);
 
             }
+        }
+
+        private Point3d GraphPoint(int hour_of_year, float value, Plane plane, Interval ival_y, Grasshopper.Kernel.Types.UVInterval ival2d) {
+            // returns a point in graph coordinates, ready to be plotted on a given plane
+            double x = ival2d.U.ParameterAt((hour_of_year+0.5) / 8760.0);
+            double y = ival2d.V.ParameterAt(ival_y.NormalizedParameterAt(value));
+            Point3d pt = new Point3d(x, y, 0);
+            return pt;
+        }
+
+    }
+
+
+
+    public class Dhr_DiurnalTimeValueGraphComponent : GH_Component {
+        public Dhr_DiurnalTimeValueGraphComponent()
+            //Call the base constructor
+            : base("Diurnal Time-Value Spatialization", "DiurnalTimeVal", "Assigns a position on a series of Diurnal Time-Value Subgraphs (including bar graphs and line graphs) for each hour given.", "DYear", "Spatialize") { }
+        public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary; } }
+        public override Guid ComponentGuid { get { return new Guid("{DD351576-711F-461F-A85A-9E2BA8D86E6C}"); } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.tree);
+            pManager.Register_StringParam("Key", "Key", "The key associated with the y-axis", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Domain", "Rng", "The domain associating values with the graph height.  In effect, sets the vertical scale of the graph.  Defaults to the Max and Min of given values.", GH_ParamAccess.item);
+            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
+            pManager.Register_2DIntervalParam("Graph Dimensions", "Dim", "The dimensions of the resulting graph", GH_ParamAccess.item);
+            pManager.Register_DoubleParam("Subgraph Width", "Wid", "The width of each diurnal subgraph, as a percentage of available area (0->1).  Defaults to 1.0", 1.0, GH_ParamAccess.item);
+
+            this.Params.Input[2].Optional = true;
+            this.Params.Input[3].Optional = true;
+            this.Params.Input[4].Optional = true;
+            this.Params.Input[5].Optional = true;
+        }
+
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.tree);
+            pManager.Register_PointParam("Positions", "pts", "The assigned positions of the hours", GH_ParamAccess.tree);
+            pManager.Register_RectangleParam("Rectangles", "rects", "Rectangles that form a bar graph plotted on each resulting subgraph, one rectangle per hour given.", GH_ParamAccess.tree);
+        }
+
+        protected override void SolveInstance(IGH_DataAccess DA) {
+            Grasshopper.Kernel.Data.GH_Structure<DHr> hourTreeIn = new Grasshopper.Kernel.Data.GH_Structure<DHr>();
+            String key = "";
+            if (DA.GetDataTree(0, out hourTreeIn) && DA.GetData(1, ref key)) {
+                
+                Interval ival_y = new Interval();
+                float[] garbage = new float[0];
+                if (!(DA.GetData(2, ref ival_y))) DHr.get_domain(key, hourTreeIn.ToArray(), ref garbage, ref ival_y); // vals are no good here, we would need a tree of values
+                
+                Plane plane = new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1));
+                DA.GetData(3, ref plane);
+
+                Grasshopper.Kernel.Types.UVInterval ival2d = new Grasshopper.Kernel.Types.UVInterval();
+                if (!DA.GetData(4, ref ival2d)) {
+                    ival2d.U0 = 0.0;
+                    ival2d.U1 = 12.0;
+                    ival2d.V0 = 0.0;
+                    ival2d.V1 = 1.0;
+                }
+
+                double barWidth = 1.0;
+                DA.GetData(5, ref barWidth);
+
+                Grasshopper.Kernel.Data.GH_Structure<DHr> hourTreeOut = new Grasshopper.Kernel.Data.GH_Structure<DHr>();
+                Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Point> points = new Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Point>();
+                Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Rectangle> rects = new Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Rectangle>();
+
+                double ival2d_u_delta = ival2d.U.Length / hourTreeIn.Branches.Count;
+
+                for (int b = 0; b < hourTreeIn.Branches.Count; b++) {
+                    List<DHr> hours = hourTreeIn.Branches[b];
+                    Grasshopper.Kernel.Data.GH_Path path = new Grasshopper.Kernel.Data.GH_Path(b);
+                    hourTreeOut.EnsurePath(path);
+                    points.EnsurePath(path);
+                    rects.EnsurePath(path);
+
+                    Grasshopper.Kernel.Types.UVInterval ival2d_sub = new Grasshopper.Kernel.Types.UVInterval(new Interval(b * ival2d_u_delta, (b + 1) * ival2d_u_delta), ival2d.V);
+                    double t0_sub = ival2d_sub.U.Mid - (ival2d_sub.U.Mid - ival2d_sub.U.T0) * barWidth;
+                    double t1_sub = ival2d_sub.U.Mid + (ival2d_sub.U.T1 - ival2d_sub.U.Mid) * barWidth;
+                    ival2d_sub.U = new Interval(t0_sub, t1_sub);
+
+                    for (int h = 0; h < hours.Count; h++) {
+                        Point3d gpt = GraphPoint(hours[h].hr%24, hours[h].val(key), plane, ival_y, ival2d_sub); // returns a point in graph coordinates
+                        hours[h].pos = gpt; // the hour records the point in graph coordinates
+
+                        Point3d wpt = plane.PointAt(gpt.X, gpt.Y);
+                        points.Append(new Grasshopper.Kernel.Types.GH_Point(wpt), path);  // adds this point in world coordinates
+
+                        double delta_x2 = (Math.Abs(ival2d_sub.U.Length) / 24.0 / 2.0);
+                        Interval ival_gx = new Interval(gpt.X - delta_x2, gpt.X + delta_x2); // interval of horz space occupied by this hour in graphic units
+                        Interval ival_gy = new Interval(ival2d_sub.V0, gpt.Y); // interval of vertical space occupied by this hour in graphic units
+
+                        Rectangle3d rect = new Rectangle3d(plane, ival_gx, ival_gy);
+                        rects.Append(new Grasshopper.Kernel.Types.GH_Rectangle(rect), path);  
+                         
+                    }
+                }
+
+                DA.SetDataTree(0, hourTreeOut);
+                DA.SetDataTree(1, points);
+                DA.SetDataTree(2, rects);
+
+            }
+        }
+
+        private Point3d GraphPoint(int hour_of_day, float value, Plane plane, Interval ival_y, Grasshopper.Kernel.Types.UVInterval ival2d) {
+            // returns a point in graph coordinates, ready to be plotted on a given plane
+            double x = ival2d.U.ParameterAt((hour_of_day + 0.5) / 24);
+            double y = ival2d.V.ParameterAt(ival_y.NormalizedParameterAt(value));
+            Point3d pt = new Point3d(x, y, 0);
+            return pt;
         }
 
     }

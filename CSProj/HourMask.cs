@@ -92,7 +92,7 @@ namespace DYear
         public void maskByMonthAndHour(int month, int hour)
         {
             // produces a mask by selecting a month (0-11) and a time of day (0-23)
-            // produces a 8760 value mask corresponding to days of year to be applied to each hour of every day
+            // produces a 8760 value mask corresponding to hours of year
             // only hours falling within the selected month and occuring on the selected hour of day will pass
 
             bool[] flags = new bool[8760];
@@ -105,11 +105,21 @@ namespace DYear
             this.maskPerHour(flags);
         }
 
+        public void maskByWeek(int week) {
+            // produces a mask by selecting a week (0-51)
+            // produces a 365 value mask corresponding to days of year to be applied to each hour of every day
+            // only hours falling within the selected week and occuring on the selected hour of day will pass
+
+            this.Value = new List<bool> { };
+            for (int d = 0; d < 365; d++) {
+                if ((d >= week * 7) && (d <( week+1)*7)) { this.Value.Add(true); } else { this.Value.Add(false); }
+            }
+        }
 
         public void maskByWeekAndHour(int week, int hour) {
             // produces a mask by selecting a week (0-51) and a time of day (0-23)
-            // produces a 8760 value mask corresponding to days of year to be applied to each hour of every day
-            // only hours falling within the selected week and occuring on the selected hour of day will pass
+            // produces a 8760 value mask corresponding to hours of year
+            // only hours falling within the selected week will pass
 
             bool[] flags = new bool[8760];
             for (int h = 0; h < 8760; h++) { flags[h] = false; }
