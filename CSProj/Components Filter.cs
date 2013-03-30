@@ -8,100 +8,7 @@ using System.Linq;
 using DYear.Statistics;
 
 namespace DYear {
-
-    #region Primitive Components
-
-    public class Dhr_GetValComponent : GH_Component {
-        public Dhr_GetValComponent()
-            //Call the base constructor
-            : base("Get Value", "GetVal", "Extracts a value from a Dhour", "DYear", "Primitive") { }
-        public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary; } }
-        public override Guid ComponentGuid { get { return new Guid("{1DB488D9-7709-423B-BAA3-F8E91E4185B1}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
-
-        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.Register_StringParam("Value Key", "Key", "The name of the value to extract", GH_ParamAccess.item);
-            pManager.RegisterParam(new GHParam_DHr(), "DHour", "Dhr", "The Dhour from which to extract a value", GH_ParamAccess.list);
-        }
-
-        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
-            pManager.Register_DoubleParam("Value", "Val", "The extracted value", GH_ParamAccess.list);
-            pManager.Register_IntervalParam("Range", "Rng", "An interval that describes the range of values found in the given list of Dhours for this key", GH_ParamAccess.list);
-        }
-
-        protected override void SolveInstance(IGH_DataAccess DA) {
-            List<DHr> dhrs = new List<DHr>();
-            string key = "";
-            if ((DA.GetData(0, ref key)) && (DA.GetDataList(1, dhrs))) //if it works...
-            {
-                List<float> vals = new List<float>();
-                float max = dhrs[0].val(key);
-                float min = dhrs[0].val(key);
-                foreach (DHr hr in dhrs) {
-                    float val = hr.val(key);
-                    vals.Add(val);
-                    if (val > max) max = val;
-                    if (val < min) min = val;
-                }
-
-                DA.SetDataList(0, vals);
-                DA.SetData(1, new Interval(min, max));
-            }
-        }
-
-
-    }
-
-    public class Dhr_GetKeysComponent : GH_Component {
-        public Dhr_GetKeysComponent()
-            //Call the base constructor
-            : base("Get Keys", "GetKeys", "Extracts the Keys from a Dhour or a list of Dhours", "DYear", "Primitive") { }
-        public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary | GH_Exposure.obscure; } }
-        public override Guid ComponentGuid { get { return new Guid("{4093D0D1-6533-4196-80E1-FDD4FC880995}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
-
-        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
-        }
-
-        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
-
-            pManager.Register_StringParam("Common Keys", "CKey", "The keys common to all hours", GH_ParamAccess.item);
-            pManager.Register_StringParam("Orphan Keys", "OKey", "The keys found in some hours, but not all", GH_ParamAccess.item);
-        }
-
-        protected override void SolveInstance(IGH_DataAccess DA) {
-            List<DHr> dhrs = new List<DHr>();
-            if (DA.GetDataList(0, dhrs)) {
-                List<string> allKeys = new List<string>();
-                foreach (DHr hr in dhrs) {
-                    if (hr.IsValid) {
-                        foreach (string key in hr.keys) { if (!allKeys.Contains(key)) { allKeys.Add(key); } }
-                    }
-                }
-                List<string> commonKeys = new List<string>();
-                List<string> orphanedKeys = new List<string>();
-                foreach (string key in allKeys) {
-                    bool isCommon = true;
-                    foreach (DHr hr in dhrs) {
-                        if (!hr.Value.m_vals.ContainsKey(key)) { isCommon = false; break; }
-                    }
-                    if (isCommon) { commonKeys.Add(key); } else {
-                        orphanedKeys.Add(key);
-                    }
-                }
-                DA.SetDataList(0, commonKeys);
-                DA.SetDataList(1, orphanedKeys);
-            }
-        }
-
-    }
-
-    #endregion
-
-
-    #region Filter & Sort Components
-
+    
     public class Dhr_LimitKeysComponent : GH_Component {
         public Dhr_LimitKeysComponent()
             //Call the base constructor
@@ -548,73 +455,96 @@ namespace DYear {
         protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.tree);
             pManager.Register_StringParam("Key", "Key", "The key to count hours on", GH_ParamAccess.item);
-            pManager.Register_IntervalParam("Interval", "Ival", "The overall interval to sample.  This interval will be subdivided into a number of subintervals.  Any values that fall outside of this iterval will be appended to the highest or lowest count", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Interval", "Ival", "The overall interval to sample.  This interval will be subdivided into a number of subintervals.  Defaults to min and max of given values.  Any values that fall outside of this iterval will be appended to the highest or lowest count.", GH_ParamAccess.item);
             pManager.Register_IntegerParam("Subdivisions", "Div", "The number of subintervals to divide the above interval into", 10, GH_ParamAccess.item);
 
             this.Params.Input[2].Optional = true;
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
-            pManager.Register_IntegerParam("Frequencies", "Freqs", "A list of frequencies describing the number of times an hour falls within a corresponding interval, returned below", GH_ParamAccess.list);
-            pManager.Register_IntervalParam("Subintervals", "Ivals", "A list of intervals, produced by subdividing the given interval, that describe ranges of values used to calculate the above frequencies", GH_ParamAccess.list);
+            pManager.Register_IntegerParam("Frequencies", "Freqs", "A list of frequencies describing the number of times an hour falls within a corresponding interval, returned below", GH_ParamAccess.tree);
+            pManager.Register_IntervalParam("Subintervals", "Ivals", "A list of intervals, produced by subdividing the given interval, that describe ranges of values used to calculate the above frequencies", GH_ParamAccess.tree);
             pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "Hours that fall into the above subintervals", GH_ParamAccess.tree);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA) {
-            List<DHr> dhrs = new List<DHr>();
+            Grasshopper.Kernel.Data.GH_Structure<DHr> hourTreeIn = new Grasshopper.Kernel.Data.GH_Structure<DHr>();
             string key = "";
             int subdivs = 0;
-            if ((DA.GetDataList(0, dhrs)) && (DA.GetData(1, ref key)) && (DA.GetData(3, ref subdivs))) {
+            if ((DA.GetDataTree(0, out hourTreeIn)) && (DA.GetData(1, ref key)) && (DA.GetData(3, ref subdivs)))
+            {
                 Interval ival_overall = new Interval();
                 if (!DA.GetData(2, ref ival_overall)) {
                     // go thru the given hours and find the max and min value for the given key
                     ival_overall.T0 = MDHr.INVALID_VAL;
                     ival_overall.T1 = MDHr.INVALID_VAL;
-                    foreach (DHr dhr in dhrs) {
+                    foreach (DHr dhr in hourTreeIn.AllData(true)) {
                         float val = dhr.val(key);
                         if ((ival_overall.T0 == MDHr.INVALID_VAL) || (val < ival_overall.T0)) ival_overall.T0 = val;
                         if ((ival_overall.T1 == MDHr.INVALID_VAL) || (val > ival_overall.T1)) ival_overall.T1 = val;
                     }
                 }
 
-                Grasshopper.Kernel.Data.GH_Structure<DHr> hrsOut = new Grasshopper.Kernel.Data.GH_Structure<DHr>();
-                List<int> freqOut = new List<int>();
-                List<Interval> ivalsOut = new List<Interval>();
-
+                Grasshopper.Kernel.Data.GH_Structure<DHr> hourTreeOut = new Grasshopper.Kernel.Data.GH_Structure<DHr>();
+                Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Integer> freqTreeOut = new Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Integer>();
+                Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Interval> ivalTreeOut = new Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Interval>();
+                
+                List<Interval> ivalList = new List<Interval>();
                 if (ival_overall.IsDecreasing) ival_overall.Swap();
                 double delta = ival_overall.Length / subdivs;
-                for (int n = 0; n < subdivs; n++) {
-                    ivalsOut.Add(new Interval(ival_overall.T0 + n * delta, ival_overall.T0 + ((n + 1) * delta)));
-                    freqOut.Add(0);
+                for (int n = 0; n < subdivs; n++) {  ivalList.Add(new Interval(ival_overall.T0 + n * delta, ival_overall.T0 + ((n + 1) * delta)));  }
+                
+                for (int b = 0; b < hourTreeIn.Branches.Count; b++)
+                {
+                    Grasshopper.Kernel.Data.GH_Structure<DHr> hourBranch = new Grasshopper.Kernel.Data.GH_Structure<DHr>();
+                    for (int n = 0; n < subdivs; n++) { hourBranch.EnsurePath(n); }
+                    List<int> freqOut = new List<int>();
 
-                }
-
-                foreach (DHr dhr in dhrs) {
-                    if (dhr.val(key) < ivalsOut[0].T0) {
-                        freqOut[0] = freqOut[0] + 1;
-                        continue;
-                    }
-                    if (dhr.val(key) > ivalsOut[ivalsOut.Count - 1].T1) {
-                        freqOut[freqOut.Count - 1] = freqOut[freqOut.Count - 1] + 1;
-                        continue;
-                    }
-                    int n = 0;
-                    foreach (Interval ival in ivalsOut) {
-                        Grasshopper.Kernel.Data.GH_Path path = new Grasshopper.Kernel.Data.GH_Path(n);
-                        hrsOut.EnsurePath(path);
-                        if (ival.IncludesParameter(dhr.val(key))) {
-                            freqOut[n] = freqOut[n] + 1;
-                            hrsOut.Append(dhr, path);
-                            break;
+                    List<DHr> hrsIn = hourTreeIn.Branches[b];
+                    foreach (DHr dhr in hrsIn)
+                    {
+                        if (dhr.val(key) < ivalList[0].T0)
+                        {
+                            hourBranch.Append(dhr, new Grasshopper.Kernel.Data.GH_Path(0));
+                            continue;
                         }
-                        n++;
+                        if (dhr.val(key) > ivalList[ivalList.Count - 1].T1)
+                        {
+                            hourBranch.Append(dhr, new Grasshopper.Kernel.Data.GH_Path(ivalList.Count - 1));
+                            continue;
+                        }
+                        for (int n = 0; n < subdivs; n++)
+                        {
+                            if (ivalList[n].IncludesParameter(dhr.val(key)))
+                            {
+                                hourBranch.Append(dhr,new Grasshopper.Kernel.Data.GH_Path(n));
+                                break;
+                            }
+                        }
                     }
+
+                    
+                    for (int bb = 0; bb < hourBranch.Branches.Count; bb++)
+                    {
+                        Grasshopper.Kernel.Data.GH_Path branch_path = hourTreeIn.Paths[b].AppendElement(bb);
+                        hourTreeOut.AppendRange(hourBranch.Branches[bb], branch_path);
+                        Grasshopper.Kernel.Types.GH_Integer freq = new Grasshopper.Kernel.Types.GH_Integer(hourBranch.Branches[bb].Count);
+                        freqTreeOut.Append(freq, branch_path);
+                        Grasshopper.Kernel.Types.GH_Interval ival = new Grasshopper.Kernel.Types.GH_Interval(ivalList[bb]);
+                        ivalTreeOut.Append(ival, branch_path);
+                    }
+                    
                 }
-                DA.SetDataList(0, freqOut);
-                DA.SetDataList(1, ivalsOut);
-                DA.SetDataTree(2, hrsOut);
+
+                hourTreeOut.Simplify(Grasshopper.Kernel.Data.GH_SimplificationMode.CollapseAllOverlaps);
+                freqTreeOut.Simplify(Grasshopper.Kernel.Data.GH_SimplificationMode.CollapseAllOverlaps);
+                ivalTreeOut.Simplify(Grasshopper.Kernel.Data.GH_SimplificationMode.CollapseAllOverlaps);
+                
+                DA.SetDataTree(0, freqTreeOut);
+                DA.SetDataTree(1, ivalTreeOut);
+                DA.SetDataTree(2, hourTreeOut);
             }
         }
 
@@ -875,6 +805,6 @@ namespace DYear {
 
 
 
-    #endregion
+
 
 }
