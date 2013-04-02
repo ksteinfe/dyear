@@ -628,8 +628,9 @@ namespace DYear {
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
             pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The spatialized Dhours.  A new stream of hours is produced for each key given.", GH_ParamAccess.tree);
-            pManager.Register_IntervalParam("Ranges", "Rngs", "Intervals that describe the range of values found for the given list keys", GH_ParamAccess.list);
+            pManager.Register_IntervalParam("Ranges", "Ranges", "A tree of Intervals.  The first branch contains the interval plotted to the graph (the interval found in the Scale input, if set).  The second branch contains a list of intervals that describe the range of values found for the given list keys", GH_ParamAccess.tree);
             pManager.Register_PointParam("Positions", "Pts", "The assigned positions of the hours", GH_ParamAccess.tree);
+            pManager.Register_PointParam("Base Points", "BsPts", "A point on the x-axis of the graph for each hour given.  Useful for making area charts.", GH_ParamAccess.tree);
             pManager.Register_RectangleParam("Regions", "Rgns", "Regions that represent the area on the resulting graph occupied by each hour given.  These rectangles form a bar graph plotted on the resulting graph, one rectangle per hour given.", GH_ParamAccess.tree);
         }
 
@@ -659,6 +660,8 @@ namespace DYear {
                     val_ranges.Add(ival);
                 }
 
+                bool force_start_at_zero = true;
+
                 int stack_dir = StackDirection(val_ranges[0]);
                 if (stack_dir==0) this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "The first key returned nothing but zero values.  I can't deal!");
                 foreach (Interval ival in val_ranges) {
@@ -672,11 +675,14 @@ namespace DYear {
                             if (ival.T1 > ival_y.T1) ival_y.T1 = ival.T1;
                         }
                     }
-
                 }
 
+                if (force_start_at_zero && calc_ival_y) ival_y.T0 = 0;
 
-                // TODO: check that all intervals contain either all positive or negative values
+                Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Interval> intervalTreeOut = new Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Interval>();
+                intervalTreeOut.Append(new Grasshopper.Kernel.Types.GH_Interval(ival_y),new Grasshopper.Kernel.Data.GH_Path(0));
+                foreach (Interval ival in val_ranges) intervalTreeOut.Append(new Grasshopper.Kernel.Types.GH_Interval(ival), new Grasshopper.Kernel.Data.GH_Path(1));
+
 
                 Plane plane = new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1));
                 DA.GetData(3, ref plane);
@@ -695,16 +701,25 @@ namespace DYear {
                 Grasshopper.Kernel.Data.GH_Structure<DHr> hourTreeOut = new Grasshopper.Kernel.Data.GH_Structure<DHr>();
                 Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Point> pointTreeOut = new Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Point>();
                 Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Rectangle> rectTreeOut = new Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Rectangle>();
+                List<Point3d> basepoints = new List<Point3d>();
+                for (int h = 0; h < hours.Count; h++) {
+                    Point3d gpt = GraphPoint(hours[h].hr, 0.0f, plane, ival_y, ival2d);
+                    Point3d wpt = plane.PointAt(gpt.X, 0.0);
+                    basepoints.Add(wpt);
+                }
 
                 for (int k = 0; k < keys.Count; k++) {
-
+                    Grasshopper.Kernel.Data.GH_Path key_path = new Grasshopper.Kernel.Data.GH_Path(k);
                     List<Point3d> points = new List<Point3d>();
                     List<Rectangle3d> rects = new List<Rectangle3d>();
+                    
                     for (int h = 0; h < hours.Count; h++) {
                         float val = val_dict[keys[k]][h];
                         for (int kk = 0; kk < k; kk++) val += val_dict[keys[kk]][h]; // add in all previous values
                         Point3d gpt = GraphPoint(hours[h].hr, val, plane, ival_y, ival2d); // returns a point in graph coordinates
+
                         hours[h].pos = gpt; // the hour records the point in graph coordinates
+                        hourTreeOut.Append(new DHr(hours[h]), key_path);
 
                         Point3d wpt = plane.PointAt(gpt.X, gpt.Y);
                         points.Add(wpt); // adds this point in world coordinates
@@ -731,20 +746,23 @@ namespace DYear {
                         Rectangle3d rect = new Rectangle3d(plane, ival_gx, ival_gy);
                         rects.Add(rect);
                     }
+
                     List<Grasshopper.Kernel.Types.GH_Point> gh_points = new List<Grasshopper.Kernel.Types.GH_Point>();
                     foreach (Point3d pt in points) gh_points.Add(new Grasshopper.Kernel.Types.GH_Point(pt));
-                    pointTreeOut.AppendRange(gh_points, new Grasshopper.Kernel.Data.GH_Path(pointTreeOut.Branches.Count));
+                    pointTreeOut.AppendRange(gh_points, key_path);
 
                     List<Grasshopper.Kernel.Types.GH_Rectangle> gh_rects = new List<Grasshopper.Kernel.Types.GH_Rectangle>();
                     foreach (Rectangle3d rec in rects) gh_rects.Add(new Grasshopper.Kernel.Types.GH_Rectangle(rec));
-                    rectTreeOut.AppendRange(gh_rects, new Grasshopper.Kernel.Data.GH_Path(pointTreeOut.Branches.Count));
+                    rectTreeOut.AppendRange(gh_rects, key_path);
+
+                    
                 }
 
                 DA.SetDataTree(0, hourTreeOut);
-                DA.SetDataList(1, val_ranges);
+                DA.SetDataTree(1, intervalTreeOut);
                 DA.SetDataTree(2, pointTreeOut);
-                DA.SetDataTree(3, rectTreeOut);
-                //DA.SetData(3, mesh);
+                DA.SetDataList(3, basepoints);
+                DA.SetDataTree(4, rectTreeOut);
 
             }
         }
