@@ -189,9 +189,9 @@ namespace DYear {
             pManager.RegisterParam(new GHParam_DHr(), "Mean Hours", "Mean", "Hours that represent the mean (average) values of all hours in the selected time cycle", GH_ParamAccess.tree);
             pManager.RegisterParam(new GHParam_DHr(), "Mode Hours", "Mode", "Hours that represent the mode (most frequent) values of all hours in the selected time cycle", GH_ParamAccess.tree);
             pManager.RegisterParam(new GHParam_DHr(), "High Hours", "Q4", "Hours that represent the highest values of all hours in the selected time cycle", GH_ParamAccess.tree);
-            pManager.RegisterParam(new GHParam_DHr(), "Upper Quantile Hours", "Q3", "Hours that represent the upper quantile (0.75) values of all hours in the selected time cycle", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "UpperQuartile  Hours", "Q3", "Hours that represent the upper quartile (0.75) values of all hours in the selected time cycle", GH_ParamAccess.tree);
             pManager.RegisterParam(new GHParam_DHr(), "Median Hours", "Q2", "Hours that represent the median values of all hours in the selected time cycle", GH_ParamAccess.tree);
-            pManager.RegisterParam(new GHParam_DHr(), "Lower Quantile Hours", "Q1", "Hours that represent the lower quantile (0.25) values of all hours in the selected time cycle", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "Lower Quartile Hours", "Q1", "Hours that represent the lower quartile (0.25) values of all hours in the selected time cycle", GH_ParamAccess.tree);
             pManager.RegisterParam(new GHParam_DHr(), "Low Hours", "Q0", "Hours that represent the lowest values of all hours in the selected time cycle", GH_ParamAccess.tree);
             pManager.RegisterParam(new GHParam_DHr(), "Sum Hours", "Sum", "Hours that represent the summation of the values of all hours in the selected time cycle", GH_ParamAccess.tree);
         }
@@ -803,7 +803,63 @@ namespace DYear {
 
     }
 
+    public class Dhr_FilterConditional : GH_Component {
+        public Dhr_FilterConditional()
+            //Call the base constructor
+            : base("Hour Conditional Filter", "CondFilter", "Filters a given set of Dhours through a conditional satement.\nOnly those hours that satisfy this condition are returned", "DYear", "Filter") { }
+        public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.tertiary; } }
+        public override Guid ComponentGuid { get { return new Guid("{202FD0E9-70A4-4970-934D-46DD39491534}"); } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
 
+        CType comparison_type;
+        public enum CType { eq, ne, gt, ge, lt, le, invalid };
+
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
+            pManager.Register_StringParam("Key", "Key", "The key to test", GH_ParamAccess.item);
+            pManager.Register_StringParam("Operator", "Opr", "The comparison operator.  Choose '==' (equal to), '!=' (not equal to),'>'(greater than),'>=' (greater than or equal to), '<' (less than), or '<=' (less than or equal to),   ", GH_ParamAccess.item);
+            pManager.Register_DoubleParam("Value", "Val", "The value to test against", GH_ParamAccess.item);
+        }
+
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours that satisfy the conditional statement.", GH_ParamAccess.list);
+        }
+
+        protected override void SolveInstance(IGH_DataAccess DA) {
+            List<DHr> hrsIn = new List<DHr>();
+            string key = "";
+            string op_string = "";
+            double val = 0.0;
+            this.comparison_type = CType.invalid;
+            if (DA.GetDataList(0, hrsIn) && DA.GetData(1, ref key) && DA.GetData(2, ref op_string) && DA.GetData(3, ref val)) {
+                
+                if (op_string.Contains("!=")) { this.comparison_type = CType.ne; } 
+                else if (op_string.Contains(">=")||op_string.Contains("=>")) { this.comparison_type = CType.ge; } 
+                else if (op_string.Contains("<=")||op_string.Contains("=<")) { this.comparison_type = CType.le; } 
+                else if (op_string.Contains("=")) { this.comparison_type = CType.eq; } 
+                else if (op_string.Contains(">")) { this.comparison_type = CType.gt; } 
+                else if (op_string.Contains("<")) { this.comparison_type = CType.le; } 
+                else {
+                    this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "I don't understand the given comparison operator.\nPlease choose '==', '!=', '>', '>=', '<', or '<='.");
+                    }
+
+                List<DHr> hrsOut = new List<DHr>();
+                foreach (DHr hour in hrsIn) {
+                    switch (this.comparison_type) {
+                        case CType.eq: if (hour.val(key) == val) hrsOut.Add(hour);break;
+                        case CType.ne: if (hour.val(key) != val) hrsOut.Add(hour);break;
+                        case CType.gt: if (hour.val(key) > val) hrsOut.Add(hour); break;
+                        case CType.ge: if (hour.val(key) >= val) hrsOut.Add(hour); break;
+                        case CType.lt: if (hour.val(key) < val) hrsOut.Add(hour); break;
+                        case CType.le: if (hour.val(key) <= val) hrsOut.Add(hour); break;
+                    }         
+                }
+                DA.SetDataList(0, hrsOut);
+            }
+        }
+
+    }
 
 
 
