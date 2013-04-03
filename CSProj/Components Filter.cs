@@ -348,20 +348,30 @@ namespace DYear {
             Dictionary<string, List<float>> value_dict = new Dictionary<string, List<float>>();
             foreach (string key in keys) { value_dict.Add(key, new List<float>()); }
             int count = 0;
+            List<int> a = new List<int>();
+            List<int> r = new List<int>();
+            List<int> g = new List<int>();
+            List<int> b = new List<int>();
             foreach (DHr hour in dhrs) {
                 if (mask.eval(hour)) {
                     count++;
+                    a.Add(hour.color.A);
+                    r.Add(hour.color.R);
+                    g.Add(hour.color.G);
+                    b.Add(hour.color.B);
                     foreach (string key in keys) { value_dict[key].Add(hour.val(key)); }
                 }
             }
-            DHr meanHr = new DHr(assigned_hour_of_year); meanHr.is_surrogate = true;
-            DHr modeHr = new DHr(assigned_hour_of_year); modeHr.is_surrogate = true;
-            DHr highHr = new DHr(assigned_hour_of_year); highHr.is_surrogate = true;
-            DHr uqHr = new DHr(assigned_hour_of_year); uqHr.is_surrogate = true;
-            DHr medianHr = new DHr(assigned_hour_of_year); medianHr.is_surrogate = true;
-            DHr lqHr = new DHr(assigned_hour_of_year); lqHr.is_surrogate = true;
-            DHr lowHr = new DHr(assigned_hour_of_year); lowHr.is_surrogate = true;
-            DHr sumHr = new DHr(assigned_hour_of_year); sumHr.is_surrogate = true;
+            Color c = Color.FromArgb((int)a.Average(), (int)r.Average(), (int)g.Average(), (int)b.Average());
+
+            DHr meanHr = new DHr(assigned_hour_of_year); meanHr.is_surrogate = true; meanHr.color = c;
+            DHr modeHr = new DHr(assigned_hour_of_year); modeHr.is_surrogate = true; modeHr.color = c;
+            DHr highHr = new DHr(assigned_hour_of_year); highHr.is_surrogate = true; highHr.color = c;
+            DHr uqHr = new DHr(assigned_hour_of_year); uqHr.is_surrogate = true; uqHr.color = c;
+            DHr medianHr = new DHr(assigned_hour_of_year); medianHr.is_surrogate = true; medianHr.color = c;
+            DHr lqHr = new DHr(assigned_hour_of_year); lqHr.is_surrogate = true; lqHr.color = c;
+            DHr lowHr = new DHr(assigned_hour_of_year); lowHr.is_surrogate = true; lowHr.color = c;
+            DHr sumHr = new DHr(assigned_hour_of_year); sumHr.is_surrogate = true; sumHr.color = c;
 
             if (calculate_mode) {
                 foreach (string key in keys) {

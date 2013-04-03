@@ -23,7 +23,8 @@ namespace DYear {
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
             pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
-            pManager.Register_2DIntervalParam("Graph Dimensions", "Dim", "The dimensions of the resulting graph", GH_ParamAccess.item);
+            pManager.Register_2DIntervalParam("Graph Dimensions", "Dim", "The dimensions of the resulting orthographic graph.  This parameter is ignored when plotting stereographic graphs", GH_ParamAccess.item);
+            pManager.Register_DoubleParam("Graph Radius", "Rad", "The dimensions of the resulting stereographic graph.  This parameter is ignored when plotting orthographic graphs", 3.0, GH_ParamAccess.item);
             pManager.Register_StringParam("Plot Type", "Typ", "The type of graph to plot.  Choose 'Ortho' or 'Stereo', defaults to Stereo.", "Stereographic", GH_ParamAccess.item);
 
             pManager.Register_StringParam("Solar Altitude Key", "Alt Key", "The key related to the solar altitude", "solar_altitude", GH_ParamAccess.item);
@@ -42,6 +43,7 @@ namespace DYear {
             pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.list);
             pManager.Register_PointParam("Positions", "Pts", "The assigned positions of the hours", GH_ParamAccess.list);
             pManager.Register_CurveParam("Lines", "Lns", "Lines that represent the area on the resulting graph occupied by each hour given.", GH_ParamAccess.list);
+            pManager.Register_ColourParam("Colors", "Clrs", "Colors corresponding to each line produced.", GH_ParamAccess.item);
             pManager.Register_MeshParam("Mesh", "Msh", "A mesh representing the resulting graph, with vertex colors assigned where applicable.", GH_ParamAccess.item);
             pManager.Register_GeometryParam("Trim Boundary", "Bnd", "A Trimming Boundary.  May be a rectangle or a circle, depending on the plot type.", GH_ParamAccess.item);
         }
@@ -58,7 +60,7 @@ namespace DYear {
 
                 this.plot_type = PType.Invalid;
                 String p_type_string = "";
-                DA.GetData(3, ref p_type_string);
+                DA.GetData(4, ref p_type_string);
                 p_type_string = p_type_string.ToLowerInvariant().Trim();
                 if (p_type_string.Contains("stereo")) { this.plot_type = PType.Stereo; }
                 if (p_type_string.Contains("ortho")) { this.plot_type = PType.Ortho; }
@@ -77,24 +79,28 @@ namespace DYear {
                     ival2d.V0 = 0.0;
                     ival2d.V1 = 1.0;
                 }
+                double radius_gr = 3.0;
+                DA.GetData(3, ref radius_gr);
 
-                DA.GetData(4, ref alt_key);
-                DA.GetData(5, ref azm_key);
-                DA.GetData(6, ref cull_night);
+                DA.GetData(5, ref alt_key);
+                DA.GetData(6, ref azm_key);
+                DA.GetData(7, ref cull_night);
 
 
                 List<Point3d> points = new List<Point3d>();
 
                 Plane drawPlane = new Plane(plane);
-                if (this.plot_type == PType.Ortho) DA.SetData(4, new Rectangle3d(drawPlane, ival2d.U, ival2d.V)); // set the trimming boundary
-                if (this.plot_type == PType.Stereo) {
+
+                if (this.plot_type == PType.Ortho) DA.SetData(5, new Rectangle3d(drawPlane, ival2d.U, ival2d.V)); // set the trimming boundary
+                if (this.plot_type == PType.Stereo)
+                {
                     drawPlane.Origin = new Point3d(plane.Origin.X, plane.Origin.Y + ival2d.V.Mid, plane.Origin.Z);
                     drawPlane.Rotate(-Math.PI / 2, drawPlane.ZAxis);
-                    ival2d.V0 = ival2d.V.Length / 2; // sets the radius of stereographic plots
+                    ival2d.V0 = radius_gr; // sets the radius of stereographic plots
                     ival2d.V1 = 0.0;
 
                     Circle circ = new Circle(drawPlane, Math.Abs(ival2d.V.Length));
-                    DA.SetData(4, circ); // set the trimming boundary
+                    DA.SetData(5, circ); // set the trimming boundary
                 }
 
 
@@ -109,9 +115,9 @@ namespace DYear {
 
                         case PType.Stereo:
                             double radius = ival2d.V.ParameterAt(alt_ival.NormalizedParameterAt(hours[h].val(alt_key)));
-
-                            x = radius * Math.Cos(hours[h].val(azm_key));
-                            y = radius * Math.Sin(hours[h].val(azm_key));
+                            double theta = -hours[h].val(azm_key); // reversed theta to ensure clockwise direction
+                            x = radius * Math.Cos(theta);
+                            y = radius * Math.Sin(theta);
                             break;
                     }
                     Point3d pt = drawPlane.PointAt(x, y);
@@ -120,7 +126,9 @@ namespace DYear {
                 }
 
                 List<Polyline> plines = new List<Polyline>();
-                for (int h = 0; h < points.Count; h++) {
+                List<Color> colors = new List<Color>();
+                for (int h = 0; h < points.Count; h++)
+                {
                     List<Point3d> pts = new List<Point3d>();
                     DHr prev_hr; if (h > 0) prev_hr = hours[h - 1]; else prev_hr = hours[hours.Count - 1];
                     DHr this_hr = hours[h];
@@ -141,6 +149,7 @@ namespace DYear {
                     }
 
                     plines.Add(new Polyline(pts));
+                    colors.Add(hours[h].color);
                 }
 
                 Mesh mesh = CreateColoredMesh(hours, points, plines, cull_night, alt_key);
@@ -151,16 +160,22 @@ namespace DYear {
                     List<DHr> day_hours = new List<DHr>();
                     List<Point3d> day_points = new List<Point3d>();
                     List<Polyline> day_plines = new List<Polyline>();
-                    for (int h = 1; h < hours.Count - 1; h++) {
-                        if (hour_contains_day(hours, h, alt_key)) {
+
+                    List<Color> day_colors = new List<Color>();
+                    for (int h = 1; h < hours.Count - 1; h++)
+                    {
+                        if (hour_contains_day(hours, h, alt_key))
+                        {
                             day_hours.Add(hours[h]);
                             day_points.Add(points[h]);
                             day_plines.Add(plines[h]);
+                            day_colors.Add(colors[h]);
                         }
                     }
                     hours = day_hours;
                     points = day_points;
                     plines = day_plines;
+                    colors = day_colors;
 
                     #region failed attempt to trim mesh
                     //trim mesh
@@ -185,10 +200,11 @@ namespace DYear {
 
                 }
 
-                DA.SetDataList(0, hours);
+                DA.SetDataList(0, new List<DHr>(hours));
                 DA.SetDataList(1, points);
                 DA.SetDataList(2, plines);
-                DA.SetData(3, mesh);
+                DA.SetDataList(3, colors);
+                DA.SetData(4, mesh);
             }
         }
 
@@ -556,7 +572,7 @@ namespace DYear {
                 for (int h = 0; h < hours.Count; h++) {
                     Point3d gpt = GraphPoint(hours[h].hr, vals[h], plane, ival_y, ival2d); // returns a point in graph coordinates
                     hours[h].pos = gpt; // the hour records the point in graph coordinates
-
+                    
                     Point3d wpt = plane.PointAt(gpt.X, gpt.Y);
                     points.Add(wpt); // adds this point in world coordinates
 
@@ -865,6 +881,7 @@ namespace DYear {
                     for (int h = 0; h < hours.Count; h++) {
                         Point3d gpt = GraphPoint(hours[h].hr % 24, hours[h].val(key), plane, ival_y, ival2d_sub); // returns a point in graph coordinates
                         hours[h].pos = gpt; // the hour records the point in graph coordinates
+                        hourTreeOut.Append(hours[h], path);
 
                         Point3d wpt = plane.PointAt(gpt.X, gpt.Y);
                         points.Append(new Grasshopper.Kernel.Types.GH_Point(wpt), path);  // adds this point in world coordinates
@@ -940,6 +957,7 @@ namespace DYear {
                 if (!(DA.GetData(3, ref ival_r))) DHr.get_domain(key_r, hours.ToArray(), ref vals_r, ref ival_r);
                 else {
                     ival_r = new Interval(hours[0].val(key_r), hours[0].val(key_r));
+
                     vals_r = new float[hours.Count];
                     for (int h = 0; h < hours.Count; h++) {
                         vals_r[h] = hours[h].val(key_r);
@@ -1032,13 +1050,13 @@ namespace DYear {
         protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
 
         public CType cycle_type;
-        public enum CType { Year, Month, Week, Day, None, Invalid };
+        public enum CType { Year, Day, None, Invalid };
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
             pManager.Register_StringParam("Key", "Key", "The key associated with the radial dimension of the graph.", GH_ParamAccess.item);
             pManager.Register_IntervalParam("Radius Scale", "SclR", "An interval that associates hour values with the graph radius, which, in effect, sets the radial scale of the graph.  Defaults to the Max and Min of given values.", GH_ParamAccess.item);
-            pManager.Register_StringParam("Period", "Prd", "The time period associated with one revolution around the graph.  Choose 'year', 'month', 'week', 'day', or 'none' (default).  The default setting of 'none' results in a graph that plots hours in the order in which they were given, ignoring their timestamp, and filling the 360deg of the circle.", "none", GH_ParamAccess.item);
+            pManager.Register_StringParam("Period", "Prd", "The time period associated with one revolution around the graph.  Choose 'year', 'day', or 'none' (default).  The default setting of 'none' results in a graph that plots hours in the order in which they were given, ignoring their timestamp, and filling the 360deg of the circle.", "none", GH_ParamAccess.item);
             pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph.  Note an angular value of zero will align with the x-axis of this plane.", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
             pManager.Register_IntervalParam("Graph Radii", "Rad", "An interval that sets the inner and outer radii of the resulting graph.  Defaults to 1.0->3.0", new Interval(1.0, 3.0), GH_ParamAccess.item);
 
@@ -1063,7 +1081,11 @@ namespace DYear {
                 float[] vals = new float[0];
 
                 if (!(DA.GetData(2, ref ival_r))) DHr.get_domain(key, hours.ToArray(), ref vals, ref ival_r);
-                else {
+                else
+                {
+                    vals = new float[hours.Count];
+                    for (int h = 0; h < hours.Count; h++) vals[h] = hours[h].val(key);
+                    /* FROM HEAD:
                     ival_r = new Interval(hours[0].val(key), hours[0].val(key));
                     vals = new float[hours.Count];
                     for (int h = 0; h < hours.Count; h++) {
@@ -1071,14 +1093,19 @@ namespace DYear {
                         if (vals[h] < ival_r.T0) ival_r.T0 = vals[h];
                         if (vals[h] > ival_r.T1) ival_r.T1 = vals[h];
                     }
+                     */
                 }
 
                 String period_string = "none";
                 cycle_type = CType.Invalid;
                 DA.GetData(3, ref period_string);
-                if (period_string.Contains("year")) { this.cycle_type = CType.Year; } else if (period_string.Contains("month")) { this.cycle_type = CType.Month; } else if (period_string.Contains("week")) { this.cycle_type = CType.Week; } else if (period_string.Contains("day") || period_string.Contains("daily")) { this.cycle_type = CType.Day; } else if (period_string.Contains("none")) { this.cycle_type = CType.None; }
-                if (cycle_type == CType.Invalid) {
-                    this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "I don't understand the time period you're looking for.\nPlease choose 'yearly', 'monthly', 'weekly', 'daily', or 'none'.");
+
+                if (period_string.Contains("year")) { this.cycle_type = CType.Year; }
+                else if (period_string.Contains("day") || period_string.Contains("daily")) { this.cycle_type = CType.Day; }
+                else if (period_string.Contains("none")) { this.cycle_type = CType.None; }
+                if (cycle_type == CType.Invalid)
+                {
+                    this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "I don't understand the time period you're looking for.\nPlease choose 'year', 'day', or 'none'.");
                     return;
                 }
 
@@ -1125,6 +1152,7 @@ namespace DYear {
 
                     case CType.Day: {
                             Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Point> points = new Grasshopper.Kernel.Data.GH_Structure<Grasshopper.Kernel.Types.GH_Point>();
+                            Grasshopper.Kernel.Data.GH_Structure<DHr> hourTreeOut = new Grasshopper.Kernel.Data.GH_Structure<DHr>();
                             List<Mesh> meshes = new List<Mesh>();
                             Rhino.Geometry.Mesh mesh = new Mesh();
                             int hour_of_day = 0;
@@ -1144,7 +1172,10 @@ namespace DYear {
                                 hours[i].pos = gpt; // the hour records the point in graph coordinates
 
                                 Point3d wpt = plane.PointAt(gpt.X, gpt.Y);
-                                points.Append(new Grasshopper.Kernel.Types.GH_Point(wpt), new Grasshopper.Kernel.Data.GH_Path(cycle_count)); // adds this point in world coordinates
+
+                                points.Append(new Grasshopper.Kernel.Types.GH_Point(wpt),new Grasshopper.Kernel.Data.GH_Path(cycle_count)); // adds this point in world coordinates
+                                hourTreeOut.Append(hours[i], new Grasshopper.Kernel.Data.GH_Path(cycle_count));
+
 
                                 mesh.Vertices.Add(wpt);
                                 mesh.VertexColors.Add(hours[i].color);
@@ -1157,7 +1188,7 @@ namespace DYear {
                                 hour_of_day++;
                             }
 
-                            DA.SetDataList(0, hours);
+                            DA.SetDataTree(0, hourTreeOut);
                             DA.SetDataTree(1, points);
                             //DA.SetDataTree(2, regions);
                             DA.SetDataList(2, meshes);
@@ -1260,11 +1291,11 @@ namespace DYear {
                     Rhino.Geometry.Mesh mesh = new Mesh();
                     foreach (Point3d pt in FakeArc(plane, ival_gr.T0, ival_angle.T0, ival_angle.T1, cnt)) {
                         mesh.Vertices.Add(pt);
-                        mesh.VertexColors.Add(colors[n]);
+                        if (has_colors) mesh.VertexColors.Add(colors[n]);
                     }
                     foreach (Point3d pt in FakeArc(plane, ival_gr.T1, ival_angle.T0, ival_angle.T1, cnt)) {
                         mesh.Vertices.Add(pt);
-                        mesh.VertexColors.Add(colors[n]);
+                        if (has_colors) mesh.VertexColors.Add(colors[n]);
                     }
                     for (int i = 0; i < cnt - 1; i++) {
                         mesh.Faces.AddFace(i, i + 1, i + cnt);
