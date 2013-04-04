@@ -695,7 +695,7 @@ namespace DYear {
     public class Dhr_ExtremePeriodsComponent : GH_Component {
         public Dhr_ExtremePeriodsComponent()
             //Call the base constructor
-            : base("Extreme Periods", "Extremes", "Returns the Dhours containing the min and max of a given key from a collection of Dhours.\nIf multiple instances of the value are encountred, the first occurance is returned.", "DYear", "Filter") { }
+            : base("Extreme Periods", "Extremes", "Returns the Dhours containing the min and max of a given key from a collection of Dhours. If multiple instances of the value are encountered, the first occurrence is returned.", "DYear", "Filter") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary; } }
         public override Guid ComponentGuid { get { return new Guid("{0C50E2C4-8719-42C0-B3F9-283A8A8F80E1}"); } }
         protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
