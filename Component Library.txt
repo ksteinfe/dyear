@@ -1,0 +1,61 @@
+            : base("Construct Hour", "Dhour", "Constructs a Dhour out of its constituent parts", "DYear", "Primitive") { }
+            
+			pManager.Register_IntegerParam("Hour Number", "Hr", "The hour of the year to construct, =between 0 and 8759.  Defaults to -1, which produces an invalid Dhour.", -1, GH_ParamAccess.list);
+            pManager.Register_StringParam("Keys", "Keys", "The named keys to store in this Dhour. Must be a list of equal length to the 'Vals' parameter", GH_ParamAccess.list);
+            pManager.Register_DoubleParam("Values", "Vals", "The values to store in this Dhour.  Must be a list of equal length to the 'Keys' parameter", GH_ParamAccess.tree);
+            pManager.Register_ColourParam("Color", "Clr", "Optional.  A color assigned to this hour.  Hours are typically assigned colors during an analysis in preparation for visualization", GH_ParamAccess.list);
+            pManager.Register_PointParam("Posistion", "Pt", "Optional.  A point assigned to this hour. Hours are typically assigned positions during an analysis in preparation for visualization", GH_ParamAccess.list);
+            
+			pManager.RegisterParam(new GHParam_DHr(), "Dhour", "Dhour", "The resulting Dhour.", GH_ParamAccess.list);
+
+			
+            : base("Decompose Hour", "Dhour", "Decomposes a Dhour into its constituent parts", "DYear", "Primitive") { }			
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHour", "Dhr", "The Dhour to decompose.", GH_ParamAccess.item);
+			
+            pManager.Register_IntegerParam("Hour Number", "Hr", "The hour of the year represented by this Dhour.", GH_ParamAccess.item);
+            pManager.Register_StringParam("Keys", "Keys", "The keys stored in this Dhour.", GH_ParamAccess.list);
+            pManager.Register_DoubleParam("Values", "Vals", "The values stored in this Dhour", GH_ParamAccess.list);
+            pManager.Register_ColourParam("Color", "Clr", "The color assigned to this hour.", GH_ParamAccess.item);
+            pManager.Register_PointParam("Posistion", "Pt", "The point assigned to this hour.", GH_ParamAccess.item);
+			
+			
+            : base("Get Value", "GetVal", "Extracts a value from a Dhour", "DYear", "Primitive") { }
+			
+            pManager.Register_StringParam("Value Key", "Key", "The name of the value to extract", GH_ParamAccess.item);
+            pManager.RegisterParam(new GHParam_DHr(), "DHour", "Dhr", "The Dhour from which to extract a value", GH_ParamAccess.list);
+			
+            pManager.Register_DoubleParam("Value", "Val", "The extracted value", GH_ParamAccess.list);
+            pManager.Register_IntervalParam("Range", "Rng", "An interval that describes the range of values found in the given list of Dhours for this key", GH_ParamAccess.list);
+
+			
+            : base("Get Keys", "GetKeys", "Extracts the Keys from a Dhour or a list of Dhours", "DYear", "Primitive") { }
+			
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
+			
+            pManager.Register_StringParam("Common Keys", "CKey", "The keys common to all Dhours", GH_ParamAccess.item);
+            pManager.Register_StringParam("Orphan Keys", "OKey", "The keys found in some Dhours, but not all", GH_ParamAccess.item);
+			
+			
+            : base("Get Color", "GetColor", "Extracts the color from a Dhour", "DYear", "Primitive") { }
+			
+            pManager.RegisterParam(new GHParam_DHr(), "DHour", "Dhr", "The Dhour from which to extract a color", GH_ParamAccess.item);
+            pManager.Register_ColourParam("Color", "Clr", "The color of the Dhour", GH_ParamAccess.item);
+			
+			
+            : base("Get Position", "GetPos", "Extracts the position from a Dhour", "DYear", "Primitive") { }
+			
+			pManager.RegisterParam(new GHParam_DHr(), "DHour", "Dhr", "The Dhour from which to extract a position", GH_ParamAccess.item);
+            pManager.Register_PointParam("Position", "Pt", "The position of the Dhour", GH_ParamAccess.item);
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
