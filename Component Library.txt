@@ -49,6 +49,268 @@
             pManager.Register_PointParam("Position", "Pt", "The position of the Dhour", GH_ParamAccess.item);
 			
 			
+            : base("Gradient Colorization", "GradColor", "Assigns a color value for each hour given, based on a given key and doman, using a single-interpolation gradient between two given colors.", "DYear", "Decorate") { }
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to apply color values", GH_ParamAccess.list);
+            pManager.Register_StringParam("Key", "Key", "The key on which to base colorization", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Domain", "Rng", "The domain that will be used to map values unto colors.  Defaults to the range of given values.\nThe high end of the domain will correspond to the given high color, and the low end will correspond to the given low color.\nValues that fall outside of the given range will raise a warning.", GH_ParamAccess.item);
+            pManager.Register_ColourParam("High Color", "Hi", "The color to assign to hours with high values.  Defaults to white.", Color.White, GH_ParamAccess.item);
+            pManager.Register_ColourParam("Mid Color", "Mid", "The color to assign to hours with middle values.  Optional.", GH_ParamAccess.item);
+            pManager.Register_ColourParam("High Color", "Lo", "The color to assign to hours with low values.  Defaults to black.", Color.Black, GH_ParamAccess.item);
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The colorized Dhours", GH_ParamAccess.list);
+            pManager.Register_ColourParam("Colors", "color", "The assigned colors", GH_ParamAccess.list);
+			
+			
+            : base("Double Gradient Colorization", "GradColor2", "Assigns a color value for each hour given, based on a given key and doman, using a double-interpolation gradient between four given colors.", "DYear", "Decorate") { }
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to apply color values", GH_ParamAccess.list);
+            pManager.Register_StringParam("Key A", "Key A", "The primary key on which to base colorization", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Domain A", "Rng A", "The domain that will be used to map values unto colors for Key A.  Defaults to the range of given values for Key A.\nValues that fall outside of the given range will raise a warning.", GH_ParamAccess.item);
+            pManager.Register_StringParam("Key B", "Key B", "The secondary key on which to base colorization", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Domain B", "Rng B", "The domain that will be used to map values unto colors for Key B.  Defaults to the range of given values for Key B.\nValues that fall outside of the given range will raise a warning.", GH_ParamAccess.item);
+            pManager.Register_ColourParam("A High, B High", "Hi-Hi", "The color to assign when A is high and B is high.  Defaults to red.", Color.Red, GH_ParamAccess.item);
+            pManager.Register_ColourParam("A High, B Low", "Hi-Lo", "The color to assign when A is high and B is low.  Defaults to yellow.", Color.Yellow, GH_ParamAccess.item);
+            pManager.Register_ColourParam("A Low, B High", "Lo-Hi", "The color to assign when A is high and B is high.  Defaults to blue.", Color.Blue, GH_ParamAccess.item);
+            pManager.Register_ColourParam("A Low, B Low", "Lo-Lo", "The color to assign when A is high and B is low.  Defaults to white.", Color.White, GH_ParamAccess.item);
+			
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The colorized Dhours", GH_ParamAccess.list);
+            pManager.Register_ColourParam("Colors", "color", "The assigned colors", GH_ParamAccess.list);
+			
+			
+            : base("Limit Keys", "LimitKeys", "Removes unwanted keys from a Dhour or list of Dhours", "DYear", "Filter") { }
+
+            pManager.Register_StringParam("Keys to Keep", "Keys", "The keys that should remain in the given Dhour", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "DHour", "Dhr", "The given Dhour", GH_ParamAccess.item);
+			
+            pManager.RegisterParam(new GHParam_DHr(), "DHour", "Dhr", "The resulting Dhour", GH_ParamAccess.item);
+			
+			
+            : base("Merge Hours", "MergeHours", "Merges two streams of Dhours.\nLooks for matching pairs of Dhours (those sharing an index) from each stream.\nWhen a pair is found, their keys are merged.\nAll keys are appended with the nickname of the input stream.\nAll non-keyed properties (position, color, etc) of DHours are not included in results.\nNaming an input 'none' will supress key renaming.", "DYear", "Filter") {
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "A", "The first set of Dhours", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "B", "The second set of Dhours", GH_ParamAccess.list);			
+			
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The merged Dhours", GH_ParamAccess.list);
+			
+			
+            : base("Periodic Statistics", "Stats", "Performs statistical operations over a given time period (daily, monthly, or monthly diurnal) on a year's worth of Dhours", "DYear", "Filter") { this.cycle_type = CType.Daily; }
+
+            pManager.RegisterParam(param, "DHours", "Dhrs", "The Dhours from which to calculate statistics", GH_ParamAccess.list);
+            pManager.Register_StringParam("Period", "P", "The time period to cycle through.  Choose 'yearly', 'monthly', 'monthly diurnal', 'weekly', 'weekly diurnal', or 'daily'.");
+
+            pManager.RegisterParam(new GHParam_DHr(), "Mean Hours", "Mean", "Hours that represent the mean (average) values of all hours in the selected time cycle", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "Mode Hours", "Mode", "Hours that represent the mode (most frequent) values of all hours in the selected time cycle", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "High Hours", "Q4", "Hours that represent the highest values of all hours in the selected time cycle", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "UpperQuartile  Hours", "Q3", "Hours that represent the upper quartile (0.75) values of all hours in the selected time cycle", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "Median Hours", "Q2", "Hours that represent the median values of all hours in the selected time cycle", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "Lower Quartile Hours", "Q1", "Hours that represent the lower quartile (0.25) values of all hours in the selected time cycle", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "Low Hours", "Q0", "Hours that represent the lowest values of all hours in the selected time cycle", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "Sum Hours", "Sum", "Hours that represent the summation of the values of all hours in the selected time cycle", GH_ParamAccess.tree);
+			
+			
+			: base("Rolling Mean", "RollMean", "Computes the rolling mean for each key in each Dhour in a collection of Dhours.\nReturns the modified set of Dhours", "DYear", "Filter") { }
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
+            pManager.Register_IntegerParam("Scope", "S", "The scope of the rolling mean - the number of nearby hours to average, both before and after the given hour", 24, GH_ParamAccess.item);
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The averaged Dhours", GH_ParamAccess.list);
+			
+			
+            : base("Hour Frequency", "HourFreq", "", "DYear", "Filter") { }
+			
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.tree);
+            pManager.Register_StringParam("Key", "Key", "The key to count hours on", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Interval", "Ival", "The overall interval to sample.  This interval will be subdivided into a number of subintervals.  Defaults to min and max of given values.  Any values that fall outside of this iterval will be appended to the highest or lowest count.", GH_ParamAccess.item);
+            pManager.Register_IntegerParam("Subdivisions", "Div", "The number of subintervals to divide the above interval into", 10, GH_ParamAccess.item);
+
+            pManager.Register_IntegerParam("Frequencies", "Freqs", "A list of frequencies describing the number of times an hour falls within a corresponding interval, returned below", GH_ParamAccess.tree);
+            pManager.Register_IntervalParam("Subintervals", "Ivals", "A list of intervals, produced by subdividing the given interval, that describe ranges of values used to calculate the above frequencies", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "Hours that fall into the above subintervals", GH_ParamAccess.tree);
+			
+			
+            : base("Hour Frequency Two", "HourFreq2", "", "DYear", "Filter") { }
+			
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
+            pManager.Register_StringParam("Key U", "Key U", "The first key to count hours on", GH_ParamAccess.item);
+            pManager.Register_StringParam("Key U", "Key V", "The second key to count hours on", GH_ParamAccess.item);
+            pManager.Register_2DIntervalParam("UV Interval", "Ival2", "The overall two-dimensional interval to sample.  This interval will be subdivided into a number of subintervals.", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Subdivisions", "Divs", "An interval of two integer numbers that describe the number of subdivisions desired in the U and V dimensions", new Interval(4, 3), GH_ParamAccess.item);
+            pManager.Register_BooleanParam("Cull Outliers", "Cul", "If true, outlying values will be culled.  If false (default), any values that fall outside of this iterval will be appended to the highest or lowest count.", false, GH_ParamAccess.item);
+
+            pManager.Register_IntegerParam("Frequencies", "Freqs", "A tree of frequencies describing the number of times an hour falls within a corresponding interval, returned below", GH_ParamAccess.tree);
+            pManager.Register_2DIntervalParam("Subintervals", "Ivals", "A tree of intervals, produced by subdividing the given interval, that describe ranges of values used to calculate the above frequencies", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "Hours that fall into the above subintervals", GH_ParamAccess.tree);
+			
+			
+            : base("Extreme Periods", "Extremes", "Returns the Dhours containing the min and max of a given key from a collection of Dhours. If multiple instances of the value are encountered, the first occurrence is returned.", "DYear", "Filter") { }
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to search for extremes within", GH_ParamAccess.list);
+            pManager.Register_StringParam("Value Key", "Key", "The name of the value to test", GH_ParamAccess.item);
+			
+            pManager.RegisterParam(new GHParam_DHr(), "Maximum Day", "MaxDay", "a 24 hour period that includes the maximum value of the given key", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Minimum Day", "MinDay", "a 24 hour period that includes the minimum value of the given key", GH_ParamAccess.list);
+			
+			
+            : base("Mask Hours", "MaskHours", "Filters a given set of Dhours through an Hourmask.\nOnly those hours allowed by the mask are returned", "DYear", "Filter") { }
+			
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_HourMask(), "Hourmask", "HMask", "The Hourmask that does the filtering", GH_ParamAccess.item);
+			
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The masked Dhours", GH_ParamAccess.list);
+			
+			
+            : base("Sort Hours", "SortHours", "Sorts a given list of Dhours by the values found in a given key", "DYear", "Filter") { }
+			
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
+            pManager.Register_StringParam("Key", "Key", "The key to sort on", GH_ParamAccess.item);
+            pManager.Register_BooleanParam("Ascending/Decending", "Asc", "Set to false to sort decending.", true);
+			
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The masked Dhours", GH_ParamAccess.list);
+			
+			
+            : base("Hour Conditional Filter", "CondFilter", "Filters a given set of Dhours through a conditional satement.\nOnly those hours that satisfy this condition are returned", "DYear", "Filter") { }
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
+            pManager.Register_StringParam("Key", "Key", "The key to test", GH_ParamAccess.item);
+            pManager.Register_StringParam("Operator", "Opr", "The comparison operator.  Choose '==' (equal to), '!=' (not equal to),'>'(greater than),'>=' (greater than or equal to), '<' (less than), or '<=' (less than or equal to),   ", GH_ParamAccess.item);
+            pManager.Register_DoubleParam("Value", "Val", "The value to test against", GH_ParamAccess.item);
+			
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours that satisfy the conditional statement.", GH_ParamAccess.list);
+			
+			
+            : base("Solar Position Spatialization", "SunPos", "Assigns a position on a Sunchart Graph for each hour given, based on a given solar alt and azimuth key", "DYear", "Spatialize") { }
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
+            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
+            pManager.Register_2DIntervalParam("Graph Dimensions", "Dim", "The dimensions of the resulting orthographic graph.  This parameter is ignored when plotting stereographic graphs", GH_ParamAccess.item);
+            pManager.Register_DoubleParam("Graph Radius", "Rad", "The dimensions of the resulting stereographic graph.  This parameter is ignored when plotting orthographic graphs", 3.0, GH_ParamAccess.item);
+            pManager.Register_StringParam("Plot Type", "Typ", "The type of graph to plot.  Choose 'Ortho' or 'Stereo', defaults to Stereo.", "Stereographic", GH_ParamAccess.item);
+
+            pManager.Register_StringParam("Solar Altitude Key", "Alt Key", "The key related to the solar altitude", "solar_altitude", GH_ParamAccess.item);
+            pManager.Register_StringParam("Solar Azimuth Key", "Azm Key", "The key related to the solar azimuth", "solar_azimuth", GH_ParamAccess.item);
+            pManager.Register_BooleanParam("Cull Nighttime", "Cull Night", "Cull nighttime hours?", true, GH_ParamAccess.item);
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.list);
+            pManager.Register_PointParam("Positions", "Pts", "The assigned positions of the hours", GH_ParamAccess.list);
+            pManager.Register_CurveParam("Lines", "Lns", "Lines that represent the area on the resulting graph occupied by each hour given.", GH_ParamAccess.list);
+            pManager.Register_ColourParam("Colors", "Clrs", "Colors corresponding to each line produced.", GH_ParamAccess.item);
+            pManager.Register_MeshParam("Mesh", "Msh", "A mesh representing the resulting graph, with vertex colors assigned where applicable.", GH_ParamAccess.item);
+            pManager.Register_GeometryParam("Trim Boundary", "Bnd", "A Trimming Boundary.  May be a rectangle or a circle, depending on the plot type.", GH_ParamAccess.item);
+			
+			
+            : base("Heatmap Spatialization", "HeatMap", "Assigns a position on a Heatmap Graph for each hour given", "DYear", "Spatialize") { }
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
+            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
+            pManager.Register_2DIntervalParam("Graph Dimensions", "Dim", "The dimensions of the resulting graph", GH_ParamAccess.item);
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.list);
+            pManager.Register_PointParam("Positions", "Pts", "The assigned positions of the hours", GH_ParamAccess.list);
+            pManager.Register_RectangleParam("Regions", "Rgns", "Regions that represent the area on the resulting graph occupied by each hour given.", GH_ParamAccess.list);
+            pManager.Register_MeshParam("Mesh", "Msh", "A mesh representing the resulting graph, with vertex colors assigned where applicable.", GH_ParamAccess.item);
+
+			
+            : base("Stacked Histogram Spatialization", "Histogram", "Assigns a position on a Histogram Graph for each hour given.  Hours are depicted as rectangles stacked according to pre-defined intervals.\nNote that a tree of Dhours is expected.\nUse the Hour Frequency component to prepare data for this component", "DYear", "Spatialize") { }
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.tree);
+            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
+            pManager.Register_2DIntervalParam("Graph Dimensions", "Dim", "The dimensions of the resulting graph.\nNote that the y-dimension scales to the longest list of given hours.", GH_ParamAccess.item);
+            pManager.Register_DoubleParam("Bar Width", "BWdth", "The width of each bar, as a percentage of available area (0->1).  Defaults to 1.0", 1.0, GH_ParamAccess.item);
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.tree);
+            pManager.Register_PointParam("Positions", "Pts", "The assigned positions of the hours (the center points of each stacked rectangle", GH_ParamAccess.tree);
+            pManager.Register_RectangleParam("Regions", "Rgns", "Regions that represent the area on the resulting graph occupied by each hour given.", GH_ParamAccess.tree);
+            pManager.Register_RectangleParam("Rectangles", "Rcts", "Rectangles plotted on the resulting histogram, one per groups of hours given.", GH_ParamAccess.list);
+            pManager.Register_MeshParam("Mesh", "Msh", "A mesh representing the resulting graph, with vertex colors assigned where applicable.", GH_ParamAccess.item);
+            pManager.Register_RectangleParam("Trim Boundary", "Bnd", "A Trimming Boundary. Useful for marking percentage of hours given against a 100% maximum", GH_ParamAccess.item);
+
+			
+            : base("Time-Value Spatialization", "TimeVal", "Assigns a position on a Time-Value Graph (including bar graphs and line graphs) for each hour given.", "DYear", "Spatialize") { }
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
+            pManager.Register_StringParam("Key", "Key", "The key associated with the y-axis", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Scale", "Scl", "An interval that associates hour values with the graph height.  In effect, sets the vertical scale of the graph.  Defaults to the Max and Min of given values.", GH_ParamAccess.item);
+            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
+            pManager.Register_2DIntervalParam("Graph Dimensions", "Dim", "The dimensions of the resulting graph", GH_ParamAccess.item);
+            pManager.Register_DoubleParam("Bar Width", "BWdth", "The width of each bar, as a percentage of available area (0->1).  Defaults to 1.0", 1.0, GH_ParamAccess.item);
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.list);
+            pManager.Register_PointParam("Positions", "Pts", "The assigned positions of the hours", GH_ParamAccess.list);
+            pManager.Register_RectangleParam("Regions", "Rgns", "Regions that represent the area on the resulting graph occupied by each hour given.  These rectangles form a bar graph plotted on the resulting graph, one rectangle per hour given.", GH_ParamAccess.list);
+
+			
+            : base("Stacked Time-Value Spatialization", "StackedTimeVal", "Assigns a position on a Stacked Time-Value Graph (including stacked bar graphs and area graphs) for each hour given.", "DYear", "Spatialize") { }
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
+            pManager.Register_StringParam("Keys", "Keys", "The keys associated with the y-axis.  Values will be stacked in the order in which these keys are given.", GH_ParamAccess.list);
+            pManager.Register_IntervalParam("Scale", "Scl", "An interval that associates hour values with the graph height.  In effect, sets the vertical scale of the graph.  Defaults to 0->(Max/Min) of the values found in all the given keys.", GH_ParamAccess.item);
+            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
+            pManager.Register_2DIntervalParam("Graph Dimensions", "Dim", "The dimensions of the resulting graph", GH_ParamAccess.item);
+            pManager.Register_DoubleParam("Bar Width", "BWdth", "The width of each bar, as a percentage of available area (0->1).  Defaults to 1.0", 1.0, GH_ParamAccess.item);
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The spatialized Dhours.  A new stream of hours is produced for each key given.", GH_ParamAccess.tree);
+            pManager.Register_IntervalParam("Ranges", "Ranges", "A tree of Intervals.  The first branch contains the interval plotted to the graph (the interval found in the Scale input, if set).  The second branch contains a list of intervals that describe the range of values found for the given list keys", GH_ParamAccess.tree);
+            pManager.Register_PointParam("Positions", "Pts", "The assigned positions of the hours", GH_ParamAccess.tree);
+            pManager.Register_PointParam("Base Points", "BsPts", "A point on the x-axis of the graph for each hour given.  Useful for making area charts.", GH_ParamAccess.tree);
+            pManager.Register_RectangleParam("Regions", "Rgns", "Regions that represent the area on the resulting graph occupied by each hour given.  These rectangles form a bar graph plotted on the resulting graph, one rectangle per hour given.", GH_ParamAccess.tree);
+
+			
+            : base("Diurnal Time-Value Spatialization", "DiurnalTimeVal", "Assigns a position on a series of Diurnal Time-Value Subgraphs (including bar graphs and line graphs) for each hour given.", "DYear", "Spatialize") { }
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.tree);
+            pManager.Register_StringParam("Key", "Key", "The key associated with the y-axis", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Scale", "Scl", "An interval that associates hour values with the graph height.  In effect, sets the vertical scale of the graph.  Defaults to the Max and Min of given values.", GH_ParamAccess.item);
+            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
+            pManager.Register_2DIntervalParam("Graph Dimensions", "Dim", "The dimensions of the resulting graph", GH_ParamAccess.item);
+            pManager.Register_DoubleParam("Subgraph Width", "Wid", "The width of each diurnal subgraph, as a percentage of available area (0->1).  Defaults to 1.0", 1.0, GH_ParamAccess.item);
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.tree);
+            pManager.Register_PointParam("Positions", "Pts", "The assigned positions of the hours", GH_ParamAccess.tree);
+            pManager.Register_RectangleParam("Regions", "Rgns", "Regions that represent the area on the resulting graph occupied by each hour given.  These rectangles form a bar graph plotted on each resulting subgraph, one rectangle per hour given.", GH_ParamAccess.tree);
+
+			
+            : base("Radial Value-Value Spatialization", "RadialValVal", "Assigns a position on a Radial Value-Value Graphs (like a radar plot or wind rose) for each hour given.", "DYear", "Spatialize") { }
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
+            pManager.Register_StringParam("Radius Key", "KeyR", "The key associated with the angular dimension of the graph.", GH_ParamAccess.item);
+            pManager.Register_StringParam("Angle Key", "KeyA", "The key associated with the radial dimension of the graph.", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Radius Scale", "SclR", "An interval that associates hour values with the graph radius.  In effect, sets the radial scale of the graph.  Defaults to the Max and Min of given values.", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Angle Scale", "SclA", "An interval that associates hour values with the graph angle.  In effect, sets the angular scale of the graph.  Defaults to 0->360.", new Interval(0, 360), GH_ParamAccess.item);
+            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph.  Note an angular value of zero will align with the x-axis of this plane.", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Graph Radii", "Rad", "An interval that sets the inner and outer radii of the resulting graph.  Defaults to 1.0->3.0", new Interval(1.0, 3.0), GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Subdivisions", "Divs", "An interval of two integer numbers that describe the number of subregions desired.  The first number corresponds to radius divisions, and the second to angular divisions.", new Interval(4, 3), GH_ParamAccess.item);
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.tree);
+            pManager.Register_PointParam("Positions", "Pts", "The assigned positions of the hours", GH_ParamAccess.tree);
+            pManager.Register_CurveParam("Regions", "Rgns", "Regions that represent the area on the resulting graph occupied by each hour given.  Useful in conjunction with HourFreq2 component.", GH_ParamAccess.tree);
+
+			
+            : base("Radial Time-Value Spatialization", "RadialTimeVal", "Assigns a position on a Radial Time-Value Graph (like a clock graph) for each hour given.", "DYear", "Spatialize") { }
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
+            pManager.Register_StringParam("Key", "Key", "The key associated with the radial dimension of the graph.", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Radius Scale", "SclR", "An interval that associates hour values with the graph radius, which, in effect, sets the radial scale of the graph.  Defaults to the Max and Min of given values.", GH_ParamAccess.item);
+            pManager.Register_StringParam("Period", "Prd", "The time period associated with one revolution around the graph.  Choose 'year', 'day', or 'none' (default).  The default setting of 'none' results in a graph that plots hours in the order in which they were given, ignoring their timestamp, and filling the 360deg of the circle.", "none", GH_ParamAccess.item);
+            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph.  Note an angular value of zero will align with the x-axis of this plane.", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Graph Radii", "Rad", "An interval that sets the inner and outer radii of the resulting graph.  Defaults to 1.0->3.0", new Interval(1.0, 3.0), GH_ParamAccess.item);
+
+            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.tree);
+            pManager.Register_PointParam("Positions", "Pts", "The assigned positions of the hours", GH_ParamAccess.tree);
+            pManager.Register_MeshParam("Mesh", "Msh", "A mesh representing the resulting graph, with vertex colors assigned where applicable.", GH_ParamAccess.list);
+
+			
+            : base("Pie Graph", "PieGraph", "Plots a Pie Graph based on a given list of values.", "DYear", "Spatialize") { }
+			
+            pManager.Register_DoubleParam("Values", "Vals", "A list of values, each associated with a slice of the Pie Graph.  The sum of these values will be used to set the 'scale' of the graph.", GH_ParamAccess.list);
+            pManager.Register_ColourParam("Colors", "Clrs", "A list of colors to be associated with each slice of the Pie Graph.", GH_ParamAccess.list);
+            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Graph Radii", "Rad", "An interval that sets the inner and outer radii of the resulting graph.  Defaults to 1.0->3.0", new Interval(1.0, 3.0), GH_ParamAccess.item);
+
+            pManager.Register_CurveParam("Regions", "Rgns", "Regions that represent each slice on the resulting Pie Graph.", GH_ParamAccess.list);
+            pManager.Register_MeshParam("Mesh", "Msh", "Meshes that represent the resulting graph, with vertex colors assigned where applicable.", GH_ParamAccess.list);
+ 
+			
 			
 			
 			

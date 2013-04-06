@@ -44,7 +44,9 @@ namespace DYear
 
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager){ }
-        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) { pManager.Register_StringParam("keys", "keys", "a list of all keys found in all parsed hours.  formatted as 'zonename :: key' or sometimes 'zonename :: subzone : key"); }
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) { 
+            pManager.Register_StringParam("keys", "keys", "a list of all keys found in all parsed hours.  formatted as 'zonename :: key' or sometimes 'zonename :: subzone : key"); 
+        }
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
