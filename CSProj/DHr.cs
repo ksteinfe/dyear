@@ -134,6 +134,19 @@ namespace DYear
             set { Value.color = value; }
         }
 
+        public int color_r {
+            get { return Value.color.R; }
+            set { Value.color = Color.FromArgb(Value.color.A, value, Value.color.G, Value.color.B); }
+        }
+        public int color_g {
+            get { return Value.color.G; }
+            set { Value.color = Color.FromArgb(Value.color.A, Value.color.R, value, Value.color.B); }
+        }
+        public int color_b {
+            get { return Value.color.B; }
+            set { Value.color = Color.FromArgb(Value.color.A, Value.color.R, Value.color.G, value); }
+        }
+
         public bool is_surrogate
         {
             get { return Value.is_surrogate; }

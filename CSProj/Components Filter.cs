@@ -437,10 +437,8 @@ namespace DYear {
                         float sum = 0;
                         for (int di = -scope / 2; di <= scope / 2; di++) {
                             int m = n + di;
-                            while ((m < 0) || (m > dhrs.Count - 1)) {
-                                if (m < 0) m = dhrs.Count + m;
-                                if (m > dhrs.Count - 1) m = m - dhrs.Count;
-                            }
+                            if (m < 0) m = dhrs.Count + m;
+                            if (m > dhrs.Count - 1) m = m - dhrs.Count;
                             sum += dhrs[m].val(key);
                         }
                         sum = sum / ((float)scope + 1);

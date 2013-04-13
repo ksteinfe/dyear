@@ -924,8 +924,8 @@ namespace DYear {
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
-            pManager.Register_StringParam("Radius Key", "KeyR", "The key associated with the angular dimension of the graph.", GH_ParamAccess.item);
-            pManager.Register_StringParam("Angle Key", "KeyA", "The key associated with the radial dimension of the graph.", GH_ParamAccess.item);
+            pManager.Register_StringParam("Radius Key", "KeyR", "The key associated with the radial dimension of the graph.", GH_ParamAccess.item);
+            pManager.Register_StringParam("Angle Key", "KeyA", "The key associated with the angular dimension of the graph.", GH_ParamAccess.item);
             pManager.Register_IntervalParam("Radius Scale", "SclR", "An interval that associates hour values with the graph radius.  In effect, sets the radial scale of the graph.  Defaults to the Max and Min of given values.", GH_ParamAccess.item);
             pManager.Register_IntervalParam("Angle Scale", "SclA", "An interval that associates hour values with the graph angle.  In effect, sets the angular scale of the graph.  Defaults to 0->360.", new Interval(0, 360), GH_ParamAccess.item);
             pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph.  Note an angular value of zero will align with the x-axis of this plane.", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
@@ -1246,6 +1246,7 @@ namespace DYear {
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
             pManager.Register_CurveParam("Regions", "Rgns", "Regions that represent each slice on the resulting Pie Graph.", GH_ParamAccess.list);
             pManager.Register_MeshParam("Mesh", "Msh", "Meshes that represent the resulting graph, with vertex colors assigned where applicable.", GH_ParamAccess.list);
+            pManager.Register_ColourParam("Colors", "Clrs", "Colors corresponding to each region", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA) {
@@ -1265,6 +1266,7 @@ namespace DYear {
                 Interval ival_gr = new Interval();
                 //Interval ival_ga = new Interval(0, Math.PI * 2);
                 DA.GetData(3, ref ival_gr);
+                this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "You've set your inner or outer radius to 0.  Invalid curves will result.");
 
                 //Interval ival_va = new Interval(0, values.Sum());
 
@@ -1272,6 +1274,7 @@ namespace DYear {
                 int segments_in_whole_circle = 36;
                 Interval ival_angle = new Interval(0, 0);
                 List<Grasshopper.Kernel.Types.GH_Curve> regions = new List<Grasshopper.Kernel.Types.GH_Curve>();
+                List<Color> colors_out = new List<Color>();
                 List<Mesh> meshes = new List<Mesh>();
 
                 for (int n = 0; n < values.Count; n++) {
@@ -1287,6 +1290,7 @@ namespace DYear {
                     Grasshopper.Kernel.Types.GH_Curve gh_curve = new Grasshopper.Kernel.Types.GH_Curve();
                     Grasshopper.Kernel.GH_Convert.ToGHCurve(pcrv, GH_Conversion.Both, ref gh_curve);
                     regions.Add(gh_curve);
+                    colors_out.Add(colors[n]);
 
                     Rhino.Geometry.Mesh mesh = new Mesh();
                     foreach (Point3d pt in FakeArc(plane, ival_gr.T0, ival_angle.T0, ival_angle.T1, cnt)) {
@@ -1311,6 +1315,7 @@ namespace DYear {
 
                 DA.SetDataList(0, regions);
                 DA.SetDataList(1, meshes);
+                DA.SetDataList(2, colors_out);
             }
         }
 
