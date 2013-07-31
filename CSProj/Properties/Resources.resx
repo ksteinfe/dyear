@@ -121,11 +121,107 @@
   <data name="Component" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\component.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="Icons_aquire_parseEnergyplus" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_aquire_parseEnergyplus.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_aquire_parseEPW" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_aquire_parseEPW.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_colorize_doublegradientcolor" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_colorize_doublegradientcolor.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_colorize_gradientcolor" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_colorize_gradientcolor.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_filter_extremes" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_filter_extremes.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_Filter_HourBinning" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_Filter_HourBinning.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_Filter_HourBinning2D" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_Filter_HourBinning2D.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_filter_hrcondfilter" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_filter_hrcondfilter.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_filter_limitkeys" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_Filter_LimitKeys.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_filter_maskhrs" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_filter_maskhrs.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_filter_mergehrs" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_filter_mergehrs.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_filter_periodicstatistics" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_filter_periodicstatistics.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_Filter_RollingMean2" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_Filter_RollingMean2.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_filter_sort" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_filter_sort.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="Icons_Param_Dhr" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\icons_param_dhr.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="Icons_Param_Dhr1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_Param_Dhr.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="Icons_Param_YearMask" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\icons_param_yearmask.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_Param_YearMask1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_Param_YearMask.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_primitive_constructhour" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_primitive_constructhour.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_primitive_deconstructhour" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_primitive_deconstructhour.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_primitive_getcolor" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_primitive_getcolor.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_primitive_getkey" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_primitive_getkey.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_primitive_getposition" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_primitive_getposition.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_primitive_getvalue" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_primitive_getvalue.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_primitive_quickheatmap" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_primitive_quickheatmap.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_spatial_diurnal_time_value" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_spatial_diurnal time value.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_spatial_heatmap" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_spatial_heatmap.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_spatial_piegraph" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_spatial_piegraph.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_spatial_radialtimevalue" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_spatial_radialtimevalue.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_spatial_radialvaluevalue" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_spatial_radialvaluevalue.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_spatial_solarposition2" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_spatial_solarposition2.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_spatial_stackedhistogram" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_spatial_stackedhistogram.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_spatial_stackedtimevalue" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_spatial_stackedtimevalue.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_spatial_timevalue" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons_spatial_timevalue.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="Olgay" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Olgay.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>

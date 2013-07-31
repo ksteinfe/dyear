@@ -348,7 +348,7 @@ namespace DYear
         }
 
         public GHParam_DHr()
-            : base(new GH_InstanceDescription("Data Hour", "Dhr", "Represents a collection of Data Hours", "DYear", "Primitive"))
+            : base(new GH_InstanceDescription("Data Hour", "Dhr", "Represents a collection of Data Hours", "Dhour", "Primitive"))
         {
             updateLocals();
         }

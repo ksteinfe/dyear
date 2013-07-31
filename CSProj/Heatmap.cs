@@ -21,12 +21,12 @@ namespace DYear
 
         public Dhr_HeatmapComponent()
             //Call the base constructor
-            : base("Quick Heatmap", "Heatmap", "Given a list of DHrs and a key, displays a greyscale heatmap of the values associated with that key.\nRed and blue indicates hours that fall outside the given domain.", "DYear", "Visualize")
+            : base("Quick Heatmap", "Heatmap", "Given a list of Dhours and a key, displays a greyscale heatmap of the values associated with that key.\nRed and blue indicates hours that fall outside the given domain.", "Dhour", "Primitive")
         {
             clearLocals();
         }
         public override Guid ComponentGuid { get { return new Guid("{709C00D7-4E99-46AB-AD4A-A7235C822726}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_primitive_quickheatmap; } }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
 
         void clearLocals()
@@ -47,7 +47,7 @@ namespace DYear
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to plot", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The Dhours to plot", GH_ParamAccess.list);
             pManager.Register_StringParam("Value Key", "Key", "The name of the value to plot", GH_ParamAccess.item);
             pManager.Register_IntervalParam("Domain", "Rng", "The [optional] domain to plot, with black corresponding to the low value and white to the high value.  Defaults to the max and min of the given values", GH_ParamAccess.item);
             Params.Input[2].Optional = true;
@@ -55,7 +55,7 @@ namespace DYear
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours that were plotted", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The Dhours that were plotted", GH_ParamAccess.list);
             pManager.Register_DoubleParam("Values", "Vals", "The values displayed in the heatmap", GH_ParamAccess.list);
             pManager.Register_IntervalParam("Range", "Rng", "An interval that describes the range of values found in the given list of Dhours for this key", GH_ParamAccess.item);
         }

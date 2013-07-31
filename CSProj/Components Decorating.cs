@@ -13,15 +13,15 @@ namespace DYear {
     public class Dhr_GradColorComponent : GH_Component {
         public Dhr_GradColorComponent()
             //Call the base constructor
-            : base("Gradient Colorization", "GradColor", "Assigns a color value for each hour given, based on a given key and doman, using a single-interpolation gradient between two given colors.", "DYear", "Decorate") { }
+            : base("Gradient Colorization", "GradColor", "Assigns a color value for each hour given, based on a given key and domain, using a single-interpolation gradient between two given colors.", "Dhour", "Colorize") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
         public override Guid ComponentGuid { get { return new Guid("{8DB38FB8-5B50-4DBC-B0B0-230757565D4E}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_colorize_gradientcolor; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to apply color values", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The Dhours to which to apply color values", GH_ParamAccess.list);
             pManager.Register_StringParam("Key", "Key", "The key on which to base colorization", GH_ParamAccess.item);
-            pManager.Register_IntervalParam("Domain", "Rng", "The domain that will be used to map values unto colors.  Defaults to the range of given values.\nThe high end of the domain will correspond to the given high color, and the low end will correspond to the given low color.\nValues that fall outside of the given range will raise a warning.", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Domain", "Rng", "The domain that maps values to their corresponding colors.  Defaults to the range of given values. The high end of the domain will correspond to the given high color, and the low end will correspond to the given low color. Values that fall outside of the given range will default to the maximum or minimum color value.", GH_ParamAccess.item);
             pManager.Register_ColourParam("High Color", "Hi", "The color to assign to hours with high values.  Defaults to white.", Color.White, GH_ParamAccess.item);
             pManager.Register_ColourParam("Mid Color", "Mid", "The color to assign to hours with middle values.  Optional.", GH_ParamAccess.item);
             pManager.Register_ColourParam("High Color", "Lo", "The color to assign to hours with low values.  Defaults to black.", Color.Black, GH_ParamAccess.item);
@@ -32,7 +32,7 @@ namespace DYear {
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The colorized Dhours", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The colorized Dhours", GH_ParamAccess.list);
             pManager.Register_ColourParam("Colors", "color", "The assigned colors", GH_ParamAccess.list);
         }
 
@@ -81,17 +81,17 @@ namespace DYear {
     public class Dhr_GradColor2Component : GH_Component {
         public Dhr_GradColor2Component()
             //Call the base constructor
-            : base("Double Gradient Colorization", "GradColor2", "Assigns a color value for each hour given, based on a given key and doman, using a double-interpolation gradient between four given colors.", "DYear", "Decorate") { }
+            : base("Double Gradient Colorization", "GradColor2", "Assigns a color value for each hour given, based on a given key and domain, using a double-interpolation gradient between four given colors.", "Dhour", "Colorize") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
         public override Guid ComponentGuid { get { return new Guid("{ABFB05A1-E552-47E6-8F48-DAE90FD16825}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_colorize_doublegradientcolor; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to apply color values", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The Dhours to which to apply color values", GH_ParamAccess.list);
             pManager.Register_StringParam("Key A", "Key A", "The primary key on which to base colorization", GH_ParamAccess.item);
-            pManager.Register_IntervalParam("Domain A", "Rng A", "The domain that will be used to map values unto colors for Key A.  Defaults to the range of given values for Key A.\nValues that fall outside of the given range will raise a warning.", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Domain A", "Rng A", "The domain that maps colors for Key A to their corresponding color.  Defaults to the range of given values for Key A.\nValues that fall outside of the given range will be reset to the maximum or minimum color value.", GH_ParamAccess.item);
             pManager.Register_StringParam("Key B", "Key B", "The secondary key on which to base colorization", GH_ParamAccess.item);
-            pManager.Register_IntervalParam("Domain B", "Rng B", "The domain that will be used to map values unto colors for Key B.  Defaults to the range of given values for Key B.\nValues that fall outside of the given range will raise a warning.", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Domain B", "Rng B", "The domain that maps colors for Key B to their corresponding color.  Defaults to the range of given values for Key B.\nValues that fall outside of the given range will be reset to the maximum or minimum color value.", GH_ParamAccess.item);
             pManager.Register_ColourParam("A High, B High", "Hi-Hi", "The color to assign when A is high and B is high.  Defaults to red.", Color.Red, GH_ParamAccess.item);
             pManager.Register_ColourParam("A High, B Low", "Hi-Lo", "The color to assign when A is high and B is low.  Defaults to yellow.", Color.Yellow, GH_ParamAccess.item);
             pManager.Register_ColourParam("A Low, B High", "Lo-Hi", "The color to assign when A is high and B is high.  Defaults to blue.", Color.Blue, GH_ParamAccess.item);
@@ -102,7 +102,7 @@ namespace DYear {
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The colorized Dhours", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The colorized Dhours", GH_ParamAccess.list);
             pManager.Register_ColourParam("Colors", "color", "The assigned colors", GH_ParamAccess.list);
         }
 

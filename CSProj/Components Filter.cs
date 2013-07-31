@@ -12,19 +12,19 @@ namespace DYear {
     public class Dhr_LimitKeysComponent : GH_Component {
         public Dhr_LimitKeysComponent()
             //Call the base constructor
-            : base("Limit Keys", "LimitKeys", "Removes unwanted keys from a Dhour or list of Dhours", "DYear", "Filter") { }
+            : base("Limit Keys", "LimitKeys", "Removes unwanted keys from a Dhour or list of Dhours", "Dhour", "Filter") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
         public override Guid ComponentGuid { get { return new Guid("{DE92A87D-73F0-46E4-AC6A-D4934587F2AF}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_filter_limitkeys; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             pManager.Register_StringParam("Keys to Keep", "Keys", "The keys that should remain in the given Dhour", GH_ParamAccess.list);
-            pManager.RegisterParam(new GHParam_DHr(), "DHour", "Dhr", "The given Dhour", GH_ParamAccess.item);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhour", "Dhr", "The given Dhour", GH_ParamAccess.item);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
 
-            pManager.RegisterParam(new GHParam_DHr(), "DHour", "Dhr", "The resulting Dhour", GH_ParamAccess.item);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhour", "Dhr", "The resulting Dhour", GH_ParamAccess.item);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA) {
@@ -47,17 +47,17 @@ namespace DYear {
     public class Dhr_MergeHoursComponent : GH_Component, IGH_VariableParameterComponent {
         public Dhr_MergeHoursComponent()
             //Call the base constructor
-            : base("Merge Hours", "MergeHours", "Merges two streams of Dhours.\nLooks for matching pairs of Dhours (those sharing an index) from each stream.\nWhen a pair is found, their keys are merged.\nAll keys are appended with the nickname of the input stream.\nAll non-keyed properties (position, color, etc) of DHours are not included in results.\nNaming an input 'none' will supress key renaming.", "DYear", "Filter") {
+            : base("Merge Hours", "MergeHours", "Merges two streams of Dhours.\nLooks for matching pairs of Dhours (those sharing an index) from each stream.\nWhen a pair is found, their keys are merged.\nAll keys are appended with the nickname of the input stream.\nAll non-keyed properties (position, color, etc) of Dhours are not included in results.\nNaming an input 'none' will suppress key renaming.", "Dhour", "Filter") {
             index_of_new_param = -1;
             total_params_added = -1;
         }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
         public override Guid ComponentGuid { get { return new Guid("{5EC55608-99F1-4CEF-8D28-819EB7EFCD62}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_filter_mergehrs; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "A", "The first set of Dhours", GH_ParamAccess.list);
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "B", "The second set of Dhours", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "A", "The first set of Dhours", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "B", "The second set of Dhours", GH_ParamAccess.list);
 
             pManager[0].Optional = false;
             pManager[1].Optional = false;
@@ -65,7 +65,7 @@ namespace DYear {
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
 
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The merged Dhours", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The merged Dhours", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA) {
@@ -174,15 +174,15 @@ namespace DYear {
 
         public Dhr_PeriodStatsComponent()
             //Call the base constructor
-            : base("Periodic Statistics", "Stats", "Performs statistical operations over a given time period (daily, monthly, or monthly diurnal) on a year's worth of Dhours", "DYear", "Filter") { this.cycle_type = CType.Daily; }
+            : base("Periodic Statistics", "Stats", "Performs statistical operations over a given time period (daily, monthly, or monthly diurnal) on a year's worth of Dhours", "Dhour", "Filter") { this.cycle_type = CType.Daily; }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary; } }
         public override Guid ComponentGuid { get { return new Guid("{FE2E05AF-B869-4C75-B3E8-7BA09EA3984B}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_filter_periodicstatistics; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             GHParam_DHr param = new GHParam_DHr();
-            pManager.RegisterParam(param, "DHours", "Dhrs", "The Dhours from which to calculate statistics", GH_ParamAccess.list);
-            pManager.Register_StringParam("Period", "P", "The time period to cycle through.  Choose 'yearly', 'monthly', 'monthly diurnal', 'weekly', 'weekly diurnal', or 'daily'.");
+            pManager.RegisterParam(param, "Dhours", "Dhrs", "The Dhours from which to calculate statistics", GH_ParamAccess.list);
+            pManager.Register_StringParam("Period", "P", "The time period to cycle through.  Choose 'yearly', 'monthly', 'monthly diurnal', 'weekly', 'weekly diurnal', or 'daily'.  Output values are labeled 'SURROGATE' to remain distinguished from original Dhour lists.");
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
@@ -190,7 +190,7 @@ namespace DYear {
             pManager.RegisterParam(new GHParam_DHr(), "Mode Hours", "Mode", "Hours that represent the mode (most frequent) values of all hours in the selected time cycle", GH_ParamAccess.tree);
             pManager.RegisterParam(new GHParam_DHr(), "High Hours", "Q4", "Hours that represent the highest values of all hours in the selected time cycle", GH_ParamAccess.tree);
             pManager.RegisterParam(new GHParam_DHr(), "UpperQuartile  Hours", "Q3", "Hours that represent the upper quartile (0.75) values of all hours in the selected time cycle", GH_ParamAccess.tree);
-            pManager.RegisterParam(new GHParam_DHr(), "Median Hours", "Q2", "Hours that represent the median values of all hours in the selected time cycle", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "Median Hours", "Q2", "Hours that represent the median (middle) values of all hours in the selected time cycle", GH_ParamAccess.tree);
             pManager.RegisterParam(new GHParam_DHr(), "Lower Quartile Hours", "Q1", "Hours that represent the lower quartile (0.25) values of all hours in the selected time cycle", GH_ParamAccess.tree);
             pManager.RegisterParam(new GHParam_DHr(), "Low Hours", "Q0", "Hours that represent the lowest values of all hours in the selected time cycle", GH_ParamAccess.tree);
             pManager.RegisterParam(new GHParam_DHr(), "Sum Hours", "Sum", "Hours that represent the summation of the values of all hours in the selected time cycle", GH_ParamAccess.tree);
@@ -409,19 +409,19 @@ namespace DYear {
     public class Dhr_RunningAverageComponent : GH_Component {
         public Dhr_RunningAverageComponent()
             //Call the base constructor
-            : base("Rolling Mean", "RollMean", "Computes the rolling mean for each key in each Dhour in a collection of Dhours.\nReturns the modified set of Dhours", "DYear", "Filter") { }
+            : base("Rolling Mean", "RollMean", "Computes the rolling mean for each key in each Dhour in a collection of Dhours.\nReturns the modified set of Dhours", "Dhour", "Filter") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary; } }
         public override Guid ComponentGuid { get { return new Guid("{1B7EAAA1-BB1F-4CBD-9538-D2B004D306D9}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_Filter_RollingMean2; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
             pManager.Register_IntegerParam("Scope", "S", "The scope of the rolling mean - the number of nearby hours to average, both before and after the given hour", 24, GH_ParamAccess.item);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
 
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The averaged Dhours", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The averaged Dhours", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA) {
@@ -457,24 +457,24 @@ namespace DYear {
     public class Dhr_HourFreqComponent : GH_Component {
         public Dhr_HourFreqComponent()
             //Call the base constructor
-            : base("Hour Frequency", "HourFreq", "", "DYear", "Filter") { }
+            : base("Hour Binning", "Bin", "Bins Dhours into set interval lists based on the values of a given key", "Dhour", "Filter") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary; } }
         public override Guid ComponentGuid { get { return new Guid("{D468F5AB-2272-483A-947D-93257818873F}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_Filter_HourBinning; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.tree);
-            pManager.Register_StringParam("Key", "Key", "The key to count hours on", GH_ParamAccess.item);
-            pManager.Register_IntervalParam("Interval", "Ival", "The overall interval to sample.  This interval will be subdivided into a number of subintervals.  Defaults to min and max of given values.  Any values that fall outside of this iterval will be appended to the highest or lowest count.", GH_ParamAccess.item);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.tree);
+            pManager.Register_StringParam("Key", "Key", "The key by which to sort hours", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Interval", "Ival", "The overall interval to sample.  This interval will be subdivided into a number of subintervals.  Defaults to min and max of given values.  Any values that fall outside of this interval will be appended to the highest or lowest count.", GH_ParamAccess.item);
             pManager.Register_IntegerParam("Subdivisions", "Div", "The number of subintervals to divide the above interval into", 10, GH_ParamAccess.item);
 
             this.Params.Input[2].Optional = true;
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
-            pManager.Register_IntegerParam("Frequencies", "Freqs", "A list of frequencies describing the number of times an hour falls within a corresponding interval, returned below", GH_ParamAccess.tree);
-            pManager.Register_IntervalParam("Subintervals", "Ivals", "A list of intervals, produced by subdividing the given interval, that describe ranges of values used to calculate the above frequencies", GH_ParamAccess.tree);
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "Hours that fall into the above subintervals", GH_ParamAccess.tree);
+            pManager.Register_IntegerParam("Frequencies", "Freqs", "A list of frequencies describing the number of hours in a bin", GH_ParamAccess.tree);
+            pManager.Register_IntervalParam("Subintervals", "Ivals", "A list of intervals, produced by subdividing the given interval, that describes the ranges of values for each bin", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "Hours that fall into the above subintervals", GH_ParamAccess.tree);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA) {
@@ -562,26 +562,26 @@ namespace DYear {
     public class Dhr_HourFreq2Component : GH_Component {
         public Dhr_HourFreq2Component()
             //Call the base constructor
-            : base("Hour Frequency Two", "HourFreq2", "", "DYear", "Filter") { }
+            : base("Hour Binning 2D", "Bin2D", "Sorts Dhours into bins based on the values of two given keys.  Bins defined by the first key are further sorted by the second key parameter.", "Dhour", "Filter") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary; } }
         public override Guid ComponentGuid { get { return new Guid("{58ED367D-9315-4133-BBE9-FCCD452075CC}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_Filter_HourBinning2D; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
-            pManager.Register_StringParam("Key U", "Key U", "The first key to count hours on", GH_ParamAccess.item);
-            pManager.Register_StringParam("Key U", "Key V", "The second key to count hours on", GH_ParamAccess.item);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
+            pManager.Register_StringParam("Key U", "Key U", "The first key by which to count hours", GH_ParamAccess.item);
+            pManager.Register_StringParam("Key U", "Key V", "The second key by which to count hours", GH_ParamAccess.item);
             pManager.Register_2DIntervalParam("UV Interval", "Ival2", "The overall two-dimensional interval to sample.  This interval will be subdivided into a number of subintervals.", GH_ParamAccess.item);
             pManager.Register_IntervalParam("Subdivisions", "Divs", "An interval of two integer numbers that describe the number of subdivisions desired in the U and V dimensions", new Interval(4, 3), GH_ParamAccess.item);
-            pManager.Register_BooleanParam("Cull Outliers", "Cul", "If true, outlying values will be culled.  If false (default), any values that fall outside of this iterval will be appended to the highest or lowest count.", false, GH_ParamAccess.item);
+            pManager.Register_BooleanParam("Cull Outliers", "Cul", "If true, outlying values will be culled.  If false (default), any values that fall outside of this interval will be appended to the highest or lowest count.", false, GH_ParamAccess.item);
 
             this.Params.Input[3].Optional = true;
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
             pManager.Register_IntegerParam("Frequencies", "Freqs", "A tree of frequencies describing the number of times an hour falls within a corresponding interval, returned below", GH_ParamAccess.tree);
-            pManager.Register_2DIntervalParam("Subintervals", "Ivals", "A tree of intervals, produced by subdividing the given interval, that describe ranges of values used to calculate the above frequencies", GH_ParamAccess.tree);
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "Hours that fall into the above subintervals", GH_ParamAccess.tree);
+            pManager.Register_2DIntervalParam("Subintervals", "Ivals", "A tree of intervals, produced by subdividing the given interval, that describe ranges of values for each bin", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "Hours that fall into the above subintervals", GH_ParamAccess.tree);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA) {
@@ -693,19 +693,19 @@ namespace DYear {
     public class Dhr_ExtremePeriodsComponent : GH_Component {
         public Dhr_ExtremePeriodsComponent()
             //Call the base constructor
-            : base("Extreme Periods", "Extremes", "Returns the Dhours containing the min and max of a given key from a collection of Dhours. If multiple instances of the value are encountered, the first occurrence is returned.", "DYear", "Filter") { }
+            : base("Extreme Periods", "Extremes", "Returns the Dhours containing the min and max of a given key from a collection of Dhours. If multiple instances of the value are encountered, the first occurrence is returned.", "Dhour", "Filter") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary; } }
         public override Guid ComponentGuid { get { return new Guid("{0C50E2C4-8719-42C0-B3F9-283A8A8F80E1}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_filter_extremes; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to search for extremes within", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The Dhours to search for extremes within", GH_ParamAccess.list);
             pManager.Register_StringParam("Value Key", "Key", "The name of the value to test", GH_ParamAccess.item);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "Maximum Day", "MaxDay", "a 24 hour period that includes the maximum value of the given key", GH_ParamAccess.list);
-            pManager.RegisterParam(new GHParam_DHr(), "Minimum Day", "MinDay", "a 24 hour period that includes the minimum value of the given key", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Maximum Day", "MaxDay", "the 24 hour day that includes the maximum value of the given key", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Minimum Day", "MinDay", "the 24 hour day that includes the minimum value of the given key", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA) {
@@ -748,19 +748,19 @@ namespace DYear {
     public class Dhr_MaskHoursComponent : GH_Component {
         public Dhr_MaskHoursComponent()
             //Call the base constructor
-            : base("Mask Hours", "MaskHours", "Filters a given set of Dhours through an Hourmask.\nOnly those hours allowed by the mask are returned", "DYear", "Filter") { }
+            : base("Mask Hours", "MaskHours", "Filters a given set of Dhours through an Hourmask.\nOnly those hours allowed by the mask are returned", "Dhour", "Filter") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.tertiary; } }
         public override Guid ComponentGuid { get { return new Guid("{7171C527-5E98-427D-9B91-200DA77F9F8D}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_filter_maskhrs; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
-            pManager.RegisterParam(new GHParam_HourMask(), "Hourmask", "HMask", "The Hourmask that does the filtering", GH_ParamAccess.item);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_HourMask(), "Hourmask", "HMask", "The Hourmask that does the filtering, requiring an inpu (ex: 'Dec 3 to Mar 15')", GH_ParamAccess.item);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
 
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The masked Dhours", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The masked Dhours", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA) {
@@ -780,20 +780,20 @@ namespace DYear {
     public class Dhr_SortHoursComponent : GH_Component {
         public Dhr_SortHoursComponent()
             //Call the base constructor
-            : base("Sort Hours", "SortHours", "Sorts a given list of Dhours by the values found in a given key", "DYear", "Filter") { }
+            : base("Sort Hours", "SortHours", "Sorts a given list of Dhours numerically by the values found in a given key", "Dhour", "Filter") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.tertiary; } }
         public override Guid ComponentGuid { get { return new Guid("{76D71582-FBA0-4376-B6D4-4FF6A4326D1E}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_filter_sort; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
             pManager.Register_StringParam("Key", "Key", "The key to sort on", GH_ParamAccess.item);
             pManager.Register_BooleanParam("Ascending/Decending", "Asc", "Set to false to sort decending.", true);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
 
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The masked Dhours", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The masked Dhours", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA) {
@@ -814,24 +814,24 @@ namespace DYear {
     public class Dhr_FilterConditional : GH_Component {
         public Dhr_FilterConditional()
             //Call the base constructor
-            : base("Hour Conditional Filter", "CondFilter", "Filters a given set of Dhours through a conditional satement.\nOnly those hours that satisfy this condition are returned", "DYear", "Filter") { }
+            : base("Hour Conditional Filter", "CondFilter", "Filters a given set of Dhours through a conditional statement.\nOnly those hours that satisfy this condition are returned", "Dhour", "Filter") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.tertiary; } }
         public override Guid ComponentGuid { get { return new Guid("{202FD0E9-70A4-4970-934D-46DD39491534}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_filter_hrcondfilter; } }
 
         CType comparison_type;
         public enum CType { eq, ne, gt, ge, lt, le, invalid };
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
             pManager.Register_StringParam("Key", "Key", "The key to test", GH_ParamAccess.item);
-            pManager.Register_StringParam("Operator", "Opr", "The comparison operator.  Choose '==' (equal to), '!=' (not equal to),'>'(greater than),'>=' (greater than or equal to), '<' (less than), or '<=' (less than or equal to),   ", GH_ParamAccess.item);
+            pManager.Register_StringParam("Operator", "Opr", "The comparison operator.  Choose '==' (equal to), '!=' (not equal to),'>'(greater than),'>=' (greater than or equal to), '<' (less than), or '<=' (less than or equal to)", GH_ParamAccess.item);
             pManager.Register_DoubleParam("Value", "Val", "The value to test against", GH_ParamAccess.item);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
 
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours that satisfy the conditional statement.", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The Dhours that satisfy the conditional statement", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA) {

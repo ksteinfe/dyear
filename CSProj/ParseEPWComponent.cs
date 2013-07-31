@@ -16,11 +16,11 @@ namespace DYear
         public ParseEPWComponent() 
         
             //Call the base constructor
-            : base("ParseEPW","EPW","Parses an EPW file","DYear","Aquire")
+            : base("ParseEPW","EPW","Parses an EPW file","Dhour","Aquire")
         { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
         public override Guid ComponentGuid { get { return new Guid("{73D41AD8-7772-4822-9B06-DA56EDAE090C}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_aquire_parseEPW; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
@@ -35,7 +35,7 @@ namespace DYear
         {
             pManager.Register_StringParam("Name", "Loc", "The location name of this weather station");
             pManager.Register_IntegerParam("Number", "Wmo", "The World Meteorological Organization designation number of this weather station");
-            pManager.Register_DoubleParam("Timezone", "Tmz", "The timezone of this weather station relative to GMT");
+            pManager.Register_DoubleParam("Timezone", "Tmz", "The time zone of this weather station relative to GMT");
             pManager.Register_VectorParam("Coords", "Crd", "The latitude, longitude, and elevation of the weather station.\n Coordinates expressed as a 3d Vector, with latitude and longitude in degrees and elevation in meters");
 
             GHParam_DHr param = new GHParam_DHr();

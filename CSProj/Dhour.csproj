@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>DYear</RootNamespace>
-    <AssemblyName>DYear</AssemblyName>
+    <AssemblyName>Dhour</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -68,6 +68,37 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\Component.png" />
+    <None Include="Resources\Icons_primitive_quickheatmap.png" />
+    <None Include="Resources\Icons_spatial_timevalue.png" />
+    <None Include="Resources\Icons_spatial_stackedtimevalue.png" />
+    <None Include="Resources\Icons_spatial_stackedhistogram.png" />
+    <None Include="Resources\Icons_spatial_solarposition2.png" />
+    <None Include="Resources\Icons_spatial_radialvaluevalue.png" />
+    <None Include="Resources\Icons_spatial_radialtimevalue.png" />
+    <None Include="Resources\Icons_spatial_piegraph.png" />
+    <None Include="Resources\Icons_spatial_heatmap.png" />
+    <None Include="Resources\Icons_spatial_diurnal time value.png" />
+    <None Include="Resources\Icons_primitive_getvalue.png" />
+    <None Include="Resources\Icons_primitive_getposition.png" />
+    <None Include="Resources\Icons_primitive_getkey4.png" />
+    <None Include="Resources\Icons_primitive_getkey.png" />
+    <None Include="Resources\Icons_primitive_getcolor.png" />
+    <None Include="Resources\Icons_primitive_deconstructhour.png" />
+    <None Include="Resources\Icons_primitive_constructhour.png" />
+    <None Include="Resources\Icons_colorize_doublegradientcolor.png" />
+    <None Include="Resources\Icons_colorize_gradientcolor.png" />
+    <None Include="Resources\Icons_filter_extremes.png" />
+    <None Include="Resources\Icons_Filter_HourBinning.png" />
+    <None Include="Resources\Icons_Filter_HourBinning2D.png" />
+    <None Include="Resources\Icons_filter_hrcondfilter.png" />
+    <None Include="Resources\Icons_Filter_LimitKeys.png" />
+    <None Include="Resources\Icons_filter_maskhrs.png" />
+    <None Include="Resources\Icons_filter_mergehrs.png" />
+    <None Include="Resources\Icons_filter_periodicstatistics.png" />
+    <None Include="Resources\Icons_Filter_RollingMean2.png" />
+    <None Include="Resources\Icons_filter_sort.png" />
+    <None Include="Resources\Icons_aquire_parseEPW.png" />
+    <None Include="Resources\Icons_aquire_parseEnergyplus.png" />
     <Content Include="Resources\Icons_Param_Dhr.png" />
     <Content Include="Resources\Icons_Param_YearMask.png" />
     <None Include="Resources\Olgay.png" />

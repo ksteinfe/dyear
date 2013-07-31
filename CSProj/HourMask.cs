@@ -225,7 +225,7 @@ namespace DYear
     public class GHParam_HourMask : GH_Param<HourMask>
     {
         public GHParam_HourMask()
-            : base(new GH_InstanceDescription("Hour Mask", "HMask", "Represents an hour mask", "DYear", "Primitive"))
+            : base(new GH_InstanceDescription("Hour Mask", "HMask", "Represents an hour mask", "Dhour", "Primitive"))
         { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
         public override System.Guid ComponentGuid { get { return new Guid("{E23F6D87-0815-4DC1-B7B6-BC28C1648B72}"); } }
@@ -236,9 +236,9 @@ namespace DYear
     {
         public HourMaskDisplay()
             //Call the base constructor
-            : base(new GH_InstanceDescription("Display Mask", "Mask", "Displays an hour mask", "DYear", "Visualize"))
+            : base(new GH_InstanceDescription("Display Mask", "Mask", "Displays an hour mask", "Dhour", "Visualize"))
         { }
-        public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
+        public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.hidden; } }
         public override Guid ComponentGuid { get { return new Guid("{5F81F476-42EA-48F2-BB32-6788D62396D1}"); } }
         protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
 

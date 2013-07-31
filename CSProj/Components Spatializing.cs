@@ -12,24 +12,24 @@ namespace DYear {
     public class Dhr_SunPosGraphComponent : GH_Component {
         public Dhr_SunPosGraphComponent()
             //Call the base constructor
-            : base("Solar Position Spatialization", "SunPos", "Assigns a position on a Sunchart Graph for each hour given, based on a given solar alt and azimuth key", "DYear", "Spatialize") { }
+            : base("Solar Position Spatialization", "SunPos", "Assigns a position on a Sunchart Graph for each hour given, based on a given solar altitude and azimuth key", "Dhour", "Spatialize") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
         public override Guid ComponentGuid { get { return new Guid("{84F09813-A273-4664-AAF4-19098CF1745B}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_spatial_solarposition2; } }
 
         public PType plot_type;
         public enum PType { Ortho, Stereo, Invalid };
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
-            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
-            pManager.Register_2DIntervalParam("Graph Dimensions", "Dim", "The dimensions of the resulting orthographic graph.  This parameter is ignored when plotting stereographic graphs", GH_ParamAccess.item);
-            pManager.Register_DoubleParam("Graph Radius", "Rad", "The dimensions of the resulting stereographic graph.  This parameter is ignored when plotting orthographic graphs", 3.0, GH_ParamAccess.item);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
+            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) at which to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
+            pManager.Register_2DIntervalParam("Graph Dimensions", "Dim", "The dimensions of the resulting orthographic graph.  This parameter is ignored when plotting stereographic graphs.", GH_ParamAccess.item);
+            pManager.Register_DoubleParam("Graph Radius", "Rad", "The dimensions of the resulting stereographic graph.  This parameter is ignored when plotting orthographic graphs.", 3.0, GH_ParamAccess.item);
             pManager.Register_StringParam("Plot Type", "Typ", "The type of graph to plot.  Choose 'Ortho' or 'Stereo', defaults to Stereo.", "Stereographic", GH_ParamAccess.item);
 
             pManager.Register_StringParam("Solar Altitude Key", "Alt Key", "The key related to the solar altitude", "solar_altitude", GH_ParamAccess.item);
             pManager.Register_StringParam("Solar Azimuth Key", "Azm Key", "The key related to the solar azimuth", "solar_azimuth", GH_ParamAccess.item);
-            pManager.Register_BooleanParam("Cull Nighttime", "Cull Night", "Cull nighttime hours?", true, GH_ParamAccess.item);
+            pManager.Register_BooleanParam("Cull Nighttime", "Cull Night", "Cull nighttime hours (default)", true, GH_ParamAccess.item);
 
             this.Params.Input[1].Optional = true;
             this.Params.Input[2].Optional = true;
@@ -40,10 +40,10 @@ namespace DYear {
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.list);
             pManager.Register_PointParam("Positions", "Pts", "The assigned positions of the hours", GH_ParamAccess.list);
-            pManager.Register_CurveParam("Lines", "Lns", "Lines that represent the area on the resulting graph occupied by each hour given.", GH_ParamAccess.list);
-            pManager.Register_ColourParam("Colors", "Clrs", "Colors corresponding to each line produced.", GH_ParamAccess.item);
+            pManager.Register_CurveParam("Lines", "Lns", "Lines that represent the area on the resulting graph occupied by each hour given", GH_ParamAccess.list);
+            pManager.Register_ColourParam("Colors", "Clrs", "Colors corresponding to each line produced", GH_ParamAccess.item);
             pManager.Register_MeshParam("Mesh", "Msh", "A mesh representing the resulting graph, with vertex colors assigned where applicable.", GH_ParamAccess.item);
             pManager.Register_GeometryParam("Trim Boundary", "Bnd", "A Trimming Boundary.  May be a rectangle or a circle, depending on the plot type.", GH_ParamAccess.item);
         }
@@ -285,14 +285,14 @@ namespace DYear {
     public class Dhr_HeatmapGraphComponent : GH_Component {
         public Dhr_HeatmapGraphComponent()
             //Call the base constructor
-            : base("Heatmap Spatialization", "HeatMap", "Assigns a position on a Heatmap Graph for each hour given", "DYear", "Spatialize") { }
+            : base("Heatmap Spatialization", "HeatMap", "Assigns a position on a Heatmap Graph for each hour given", "Dhour", "Spatialize") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
         public override Guid ComponentGuid { get { return new Guid("{AAC21149-51F7-4516-9DB5-36AE667B89A8}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_spatial_heatmap; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
-            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
+            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) at which to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
             pManager.Register_2DIntervalParam("Graph Dimensions", "Dim", "The dimensions of the resulting graph", GH_ParamAccess.item);
 
             this.Params.Input[1].Optional = true;
@@ -300,9 +300,9 @@ namespace DYear {
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.list);
             pManager.Register_PointParam("Positions", "Pts", "The assigned positions of the hours", GH_ParamAccess.list);
-            pManager.Register_RectangleParam("Regions", "Rgns", "Regions that represent the area on the resulting graph occupied by each hour given.", GH_ParamAccess.list);
+            pManager.Register_RectangleParam("Regions", "Rgns", "Regions that represent the area on the resulting graph occupied by each hour given", GH_ParamAccess.list);
             pManager.Register_MeshParam("Mesh", "Msh", "A mesh representing the resulting graph, with vertex colors assigned where applicable.", GH_ParamAccess.item);
         }
 
@@ -377,16 +377,16 @@ namespace DYear {
     public class Dhr_StackedHistogramGraphComponent : GH_Component {
         public Dhr_StackedHistogramGraphComponent()
             //Call the base constructor
-            : base("Stacked Histogram Spatialization", "Histogram", "Assigns a position on a Histogram Graph for each hour given.  Hours are depicted as rectangles stacked according to pre-defined intervals.\nNote that a tree of Dhours is expected.\nUse the Hour Frequency component to prepare data for this component", "DYear", "Spatialize") { }
+            : base("Stacked Histogram Spatialization", "Histogram", "Assigns a position on a Histogram Graph for each hour given.  Hours are depicted as rectangles stacked according to pre-defined intervals.\nNote that a tree of Dhours is expected.\nUse the Hour Frequency component to prepare data for this component.", "Dhour", "Spatialize") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary; } }
         public override Guid ComponentGuid { get { return new Guid("{A577421B-A634-477E-BE7D-0D12D85E8800}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_spatial_stackedhistogram; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.tree);
-            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.tree);
+            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) at which to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
             pManager.Register_2DIntervalParam("Graph Dimensions", "Dim", "The dimensions of the resulting graph.\nNote that the y-dimension scales to the longest list of given hours.", GH_ParamAccess.item);
-            pManager.Register_DoubleParam("Bar Width", "BWdth", "The width of each bar, as a percentage of available area (0->1).  Defaults to 1.0", 1.0, GH_ParamAccess.item);
+            pManager.Register_DoubleParam("Bar Width", "BWdth", "The width of each bar, as a percentage of available area (0 -> 1).  Defaults to 1.0", 1.0, GH_ParamAccess.item);
 
             this.Params.Input[1].Optional = true;
             this.Params.Input[2].Optional = true;
@@ -394,12 +394,12 @@ namespace DYear {
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.tree);
             pManager.Register_PointParam("Positions", "Pts", "The assigned positions of the hours (the center points of each stacked rectangle", GH_ParamAccess.tree);
-            pManager.Register_RectangleParam("Regions", "Rgns", "Regions that represent the area on the resulting graph occupied by each hour given.", GH_ParamAccess.tree);
-            pManager.Register_RectangleParam("Rectangles", "Rcts", "Rectangles plotted on the resulting histogram, one per groups of hours given.", GH_ParamAccess.list);
-            pManager.Register_MeshParam("Mesh", "Msh", "A mesh representing the resulting graph, with vertex colors assigned where applicable.", GH_ParamAccess.item);
-            pManager.Register_RectangleParam("Trim Boundary", "Bnd", "A Trimming Boundary. Useful for marking percentage of hours given against a 100% maximum", GH_ParamAccess.item);
+            pManager.Register_RectangleParam("Regions", "Rgns", "Regions that represent the area on the resulting graph occupied by each hour given", GH_ParamAccess.tree);
+            pManager.Register_RectangleParam("Rectangles", "Rcts", "Rectangles plotted on the resulting histogram, one per groups of hours given", GH_ParamAccess.list);
+            pManager.Register_MeshParam("Mesh", "Msh", "A mesh representing the resulting graph, with vertex colors assigned where applicable", GH_ParamAccess.item);
+            pManager.Register_RectangleParam("Trim Boundary", "Bnd", "A Trimming Boundary. Useful for marking percentage of hours given against a 100% maximum.", GH_ParamAccess.item);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA) {
@@ -510,18 +510,18 @@ namespace DYear {
     public class Dhr_TimeValueGraphComponent : GH_Component {
         public Dhr_TimeValueGraphComponent()
             //Call the base constructor
-            : base("Time-Value Spatialization", "TimeVal", "Assigns a position on a Time-Value Graph (including bar graphs and line graphs) for each hour given.", "DYear", "Spatialize") { }
+            : base("Time-Value Spatialization", "TimeVal", "Assigns a position on a Time-Value Graph (including bar graphs and line graphs) for each hour given.", "Dhour", "Spatialize") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary; } }
         public override Guid ComponentGuid { get { return new Guid("{C1DEEFD9-BADF-4189-813C-AF3DFB01AF80}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_spatial_timevalue; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
             pManager.Register_StringParam("Key", "Key", "The key associated with the y-axis", GH_ParamAccess.item);
-            pManager.Register_IntervalParam("Scale", "Scl", "An interval that associates hour values with the graph height.  In effect, sets the vertical scale of the graph.  Defaults to the Max and Min of given values.", GH_ParamAccess.item);
-            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Scale", "Scl", "An interval that associates hour values with the graph height, setting the vertical scale of the graph.  Defaults to the max and min of given values.", GH_ParamAccess.item);
+            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) at which to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
             pManager.Register_2DIntervalParam("Graph Dimensions", "Dim", "The dimensions of the resulting graph", GH_ParamAccess.item);
-            pManager.Register_DoubleParam("Bar Width", "BWdth", "The width of each bar, as a percentage of available area (0->1).  Defaults to 1.0", 1.0, GH_ParamAccess.item);
+            pManager.Register_DoubleParam("Bar Width", "BWdth", "The width of each bar, as a percentage of available area (0 -> 1).  Defaults to 1.0", 1.0, GH_ParamAccess.item);
 
             this.Params.Input[2].Optional = true;
             this.Params.Input[3].Optional = true;
@@ -530,7 +530,7 @@ namespace DYear {
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.list);
             pManager.Register_PointParam("Positions", "Pts", "The assigned positions of the hours", GH_ParamAccess.list);
             pManager.Register_RectangleParam("Regions", "Rgns", "Regions that represent the area on the resulting graph occupied by each hour given.  These rectangles form a bar graph plotted on the resulting graph, one rectangle per hour given.", GH_ParamAccess.list);
         }
@@ -623,18 +623,18 @@ namespace DYear {
     public class Dhr_StackedTimeValueGraphComponent : GH_Component {
         public Dhr_StackedTimeValueGraphComponent()
             //Call the base constructor
-            : base("Stacked Time-Value Spatialization", "StackedTimeVal", "Assigns a position on a Stacked Time-Value Graph (including stacked bar graphs and area graphs) for each hour given.", "DYear", "Spatialize") { }
+            : base("Stacked Time-Value Spatialization", "StackedTimeVal", "Assigns a position on a Stacked Time-Value Graph (including stacked bar graphs and area graphs) for each hour given.", "Dhour", "Spatialize") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.tertiary; } }
         public override Guid ComponentGuid { get { return new Guid("{441D0C56-8D20-4DF4-8334-169BA17C985E}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_spatial_stackedtimevalue; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
             pManager.Register_StringParam("Keys", "Keys", "The keys associated with the y-axis.  Values will be stacked in the order in which these keys are given.", GH_ParamAccess.list);
-            pManager.Register_IntervalParam("Scale", "Scl", "An interval that associates hour values with the graph height.  In effect, sets the vertical scale of the graph.  Defaults to 0->(Max/Min) of the values found in all the given keys.", GH_ParamAccess.item);
-            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Scale", "Scl", "An interval that associates hour values with the graph height.  In effect, sets the vertical scale of the graph.  Defaults to 0 ->(Max/Min) of the values found in all the given keys.", GH_ParamAccess.item);
+            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) at which to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
             pManager.Register_2DIntervalParam("Graph Dimensions", "Dim", "The dimensions of the resulting graph", GH_ParamAccess.item);
-            pManager.Register_DoubleParam("Bar Width", "BWdth", "The width of each bar, as a percentage of available area (0->1).  Defaults to 1.0", 1.0, GH_ParamAccess.item);
+            pManager.Register_DoubleParam("Bar Width", "BWdth", "The width of each bar, as a percentage of available area (0 -> 1).  Defaults to 1.0", 1.0, GH_ParamAccess.item);
 
             this.Params.Input[2].Optional = true;
             this.Params.Input[3].Optional = true;
@@ -643,8 +643,8 @@ namespace DYear {
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The spatialized Dhours.  A new stream of hours is produced for each key given.", GH_ParamAccess.tree);
-            pManager.Register_IntervalParam("Ranges", "Ranges", "A tree of Intervals.  The first branch contains the interval plotted to the graph (the interval found in the Scale input, if set).  The second branch contains a list of intervals that describe the range of values found for the given list keys", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The spatialized Dhours.  A new stream of hours is produced for each key given.", GH_ParamAccess.tree);
+            pManager.Register_IntervalParam("Ranges", "Ranges", "A tree of Intervals.  The first branch contains the interval plotted to the graph (the interval found in the Scale input, if set).  The second branch contains a list of intervals that describe the range of values found for the given list keys.", GH_ParamAccess.tree);
             pManager.Register_PointParam("Positions", "Pts", "The assigned positions of the hours", GH_ParamAccess.tree);
             pManager.Register_PointParam("Base Points", "BsPts", "A point on the x-axis of the graph for each hour given.  Useful for making area charts.", GH_ParamAccess.tree);
             pManager.Register_RectangleParam("Regions", "Rgns", "Regions that represent the area on the resulting graph occupied by each hour given.  These rectangles form a bar graph plotted on the resulting graph, one rectangle per hour given.", GH_ParamAccess.tree);
@@ -812,18 +812,18 @@ namespace DYear {
     public class Dhr_DiurnalTimeValueGraphComponent : GH_Component {
         public Dhr_DiurnalTimeValueGraphComponent()
             //Call the base constructor
-            : base("Diurnal Time-Value Spatialization", "DiurnalTimeVal", "Assigns a position on a series of Diurnal Time-Value Subgraphs (including bar graphs and line graphs) for each hour given.", "DYear", "Spatialize") { }
+            : base("Diurnal Time-Value Spatialization", "DiurnalTimeVal", "Assigns a position on a series of Diurnal Time-Value Subgraphs (including bar graphs and line graphs) for each hour given.", "Dhour", "Spatialize") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary; } }
         public override Guid ComponentGuid { get { return new Guid("{DD351576-711F-461F-A85A-9E2BA8D86E6C}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_spatial_diurnal_time_value; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.tree);
             pManager.Register_StringParam("Key", "Key", "The key associated with the y-axis", GH_ParamAccess.item);
-            pManager.Register_IntervalParam("Scale", "Scl", "An interval that associates hour values with the graph height.  In effect, sets the vertical scale of the graph.  Defaults to the Max and Min of given values.", GH_ParamAccess.item);
-            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Scale", "Scl", "An interval that associates hour values with the graph height.  In effect, sets the vertical scale of the graph.  Defaults to the max and min of given values.", GH_ParamAccess.item);
+            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) at which to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
             pManager.Register_2DIntervalParam("Graph Dimensions", "Dim", "The dimensions of the resulting graph", GH_ParamAccess.item);
-            pManager.Register_DoubleParam("Subgraph Width", "Wid", "The width of each diurnal subgraph, as a percentage of available area (0->1).  Defaults to 1.0", 1.0, GH_ParamAccess.item);
+            pManager.Register_DoubleParam("Subgraph Width", "Wid", "The width of each diurnal subgraph, as a percentage of available area (0 -> 1).  Defaults to 1.0", 1.0, GH_ParamAccess.item);
 
             this.Params.Input[2].Optional = true;
             this.Params.Input[3].Optional = true;
@@ -832,7 +832,7 @@ namespace DYear {
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.tree);
             pManager.Register_PointParam("Positions", "Pts", "The assigned positions of the hours", GH_ParamAccess.tree);
             pManager.Register_RectangleParam("Regions", "Rgns", "Regions that represent the area on the resulting graph occupied by each hour given.  These rectangles form a bar graph plotted on each resulting subgraph, one rectangle per hour given.", GH_ParamAccess.tree);
         }
@@ -917,19 +917,19 @@ namespace DYear {
     public class Dhr_RadialValueValueGraphComponent : GH_Component {
         public Dhr_RadialValueValueGraphComponent()
             //Call the base constructor
-            : base("Radial Value-Value Spatialization", "RadialValVal", "Assigns a position on a Radial Value-Value Graphs (like a radar plot or wind rose) for each hour given.", "DYear", "Spatialize") { }
+            : base("Radial Value-Value Spatialization", "RadialValVal", "Assigns a position on a Radial Value-Value Graphs (like a radar plot or wind rose) for each hour given.", "Dhour", "Spatialize") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.tertiary; } }
         public override Guid ComponentGuid { get { return new Guid("{D33CA97B-223A-4E9C-ACB3-42365D176AD7}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_spatial_radialvaluevalue; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
-            pManager.Register_StringParam("Radius Key", "KeyR", "The key associated with the radial dimension of the graph.", GH_ParamAccess.item);
-            pManager.Register_StringParam("Angle Key", "KeyA", "The key associated with the angular dimension of the graph.", GH_ParamAccess.item);
-            pManager.Register_IntervalParam("Radius Scale", "SclR", "An interval that associates hour values with the graph radius.  In effect, sets the radial scale of the graph.  Defaults to the Max and Min of given values.", GH_ParamAccess.item);
-            pManager.Register_IntervalParam("Angle Scale", "SclA", "An interval that associates hour values with the graph angle.  In effect, sets the angular scale of the graph.  Defaults to 0->360.", new Interval(0, 360), GH_ParamAccess.item);
-            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph.  Note an angular value of zero will align with the x-axis of this plane.", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
-            pManager.Register_IntervalParam("Graph Radii", "Rad", "An interval that sets the inner and outer radii of the resulting graph.  Defaults to 1.0->3.0", new Interval(1.0, 3.0), GH_ParamAccess.item);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
+            pManager.Register_StringParam("Radius Key", "KeyR", "The key associated with the radial dimension of the graph", GH_ParamAccess.item);
+            pManager.Register_StringParam("Angle Key", "KeyA", "The key associated with the angular dimension of the graph", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Radius Scale", "SclR", "An interval that associates hour values with the graph radius, setting the radial scale of the graph.  Defaults to the max and min of given values.", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Angle Scale", "SclA", "An interval that associates hour values with the graph angle, setting the angular scale of the graph.  Defaults to 0 -> 360.", new Interval(0, 360), GH_ParamAccess.item);
+            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) at which to draw this graph.  Note an angular value of zero will align with the x-axis of this plane.", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Graph Radii", "Rad", "An interval that sets the inner and outer radii of the resulting graph.  Defaults to 1.0 -> 3.0", new Interval(1.0, 3.0), GH_ParamAccess.item);
             pManager.Register_IntervalParam("Subdivisions", "Divs", "An interval of two integer numbers that describe the number of subregions desired.  The first number corresponds to radius divisions, and the second to angular divisions.", new Interval(4, 3), GH_ParamAccess.item);
 
             this.Params.Input[3].Optional = true;
@@ -938,9 +938,9 @@ namespace DYear {
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.tree);
             pManager.Register_PointParam("Positions", "Pts", "The assigned positions of the hours", GH_ParamAccess.tree);
-            pManager.Register_CurveParam("Regions", "Rgns", "Regions that represent the area on the resulting graph occupied by each hour given.  Useful in conjunction with HourFreq2 component.", GH_ParamAccess.tree);
+            pManager.Register_CurveParam("Regions", "Rgns", "Regions that represent the area on the resulting graph occupied by each hour given.  Useful in conjunction with the Hour Binning 2D component.", GH_ParamAccess.tree);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA) {
@@ -1044,27 +1044,27 @@ namespace DYear {
     public class Dhr_RadialTimeValueGraphComponent : GH_Component {
         public Dhr_RadialTimeValueGraphComponent()
             //Call the base constructor
-            : base("Radial Time-Value Spatialization", "RadialTimeVal", "Assigns a position on a Radial Time-Value Graph (like a clock graph) for each hour given.", "DYear", "Spatialize") { }
+            : base("Radial Time-Value Spatialization", "RadialTimeVal", "Assigns a position on a Radial Time-Value Graph (like a clock graph) for each hour given.", "Dhour", "Spatialize") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.tertiary; } }
         public override Guid ComponentGuid { get { return new Guid("{64575900-973A-4FD3-83D6-8D1DFAF51573}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_spatial_radialtimevalue; } }
 
         public CType cycle_type;
         public enum CType { Year, Day, None, Invalid };
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The Dhours to which to assign positions", GH_ParamAccess.list);
             pManager.Register_StringParam("Key", "Key", "The key associated with the radial dimension of the graph.", GH_ParamAccess.item);
-            pManager.Register_IntervalParam("Radius Scale", "SclR", "An interval that associates hour values with the graph radius, which, in effect, sets the radial scale of the graph.  Defaults to the Max and Min of given values.", GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Radius Scale", "SclR", "An interval that associates hour values with the graph radius, setting the radial scale of the graph.  Defaults to the max and min of given values.", GH_ParamAccess.item);
             pManager.Register_StringParam("Period", "Prd", "The time period associated with one revolution around the graph.  Choose 'year', 'day', or 'none' (default).  The default setting of 'none' results in a graph that plots hours in the order in which they were given, ignoring their timestamp, and filling the 360deg of the circle.", "none", GH_ParamAccess.item);
-            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph.  Note an angular value of zero will align with the x-axis of this plane.", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
-            pManager.Register_IntervalParam("Graph Radii", "Rad", "An interval that sets the inner and outer radii of the resulting graph.  Defaults to 1.0->3.0", new Interval(1.0, 3.0), GH_ParamAccess.item);
+            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) at which to draw this graph.  Note an angular value of zero will align with the x-axis of this plane.", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Graph Radii", "Rad", "An interval that sets the inner and outer radii of the resulting graph.  Defaults to 1.0 -> 3.0", new Interval(1.0, 3.0), GH_ParamAccess.item);
 
             this.Params.Input[2].Optional = true;
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.tree);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The spatialized Dhours", GH_ParamAccess.tree);
             pManager.Register_PointParam("Positions", "Pts", "The assigned positions of the hours", GH_ParamAccess.tree);
             pManager.Register_MeshParam("Mesh", "Msh", "A mesh representing the resulting graph, with vertex colors assigned where applicable.", GH_ParamAccess.list);
         }
@@ -1229,22 +1229,22 @@ namespace DYear {
     public class Dhr_PieGraphComponent : GH_Component {
         public Dhr_PieGraphComponent()
             //Call the base constructor
-            : base("Pie Graph", "PieGraph", "Plots a Pie Graph based on a given list of values.", "DYear", "Spatialize") { }
+            : base("Pie Graph", "PieGraph", "Plots a Pie Graph based on a given list of values.", "Dhour", "Spatialize") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.tertiary; } }
         public override Guid ComponentGuid { get { return new Guid("{F2B7D8F6-DE7D-44C3-99AC-9222D910E5C8}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_spatial_piegraph; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             pManager.Register_DoubleParam("Values", "Vals", "A list of values, each associated with a slice of the Pie Graph.  The sum of these values will be used to set the 'scale' of the graph.", GH_ParamAccess.list);
-            pManager.Register_ColourParam("Colors", "Clrs", "A list of colors to be associated with each slice of the Pie Graph.", GH_ParamAccess.list);
-            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
-            pManager.Register_IntervalParam("Graph Radii", "Rad", "An interval that sets the inner and outer radii of the resulting graph.  Defaults to 1.0->3.0", new Interval(1.0, 3.0), GH_ParamAccess.item);
+            pManager.Register_ColourParam("Colors", "Clrs", "A list of colors to be associated with each slice of the Pie Graph", GH_ParamAccess.list);
+            pManager.Register_PlaneParam("Location", "Loc", "The location and orientation (as a plane) at which to draw this graph", new Plane(new Point3d(0, 0, 0), new Vector3d(0, 0, 1)), GH_ParamAccess.item);
+            pManager.Register_IntervalParam("Graph Radii", "Rad", "An interval that sets the inner and outer radii of the resulting graph.  Defaults to 1.0 -> 3.0", new Interval(1.0, 3.0), GH_ParamAccess.item);
 
             this.Params.Input[1].Optional = true;
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
-            pManager.Register_CurveParam("Regions", "Rgns", "Regions that represent each slice on the resulting Pie Graph.", GH_ParamAccess.list);
+            pManager.Register_CurveParam("Regions", "Rgns", "Regions that represent each slice on the resulting Pie Graph", GH_ParamAccess.list);
             pManager.Register_MeshParam("Mesh", "Msh", "Meshes that represent the resulting graph, with vertex colors assigned where applicable.", GH_ParamAccess.list);
             pManager.Register_ColourParam("Colors", "Clrs", "Colors corresponding to each region", GH_ParamAccess.list);
         }

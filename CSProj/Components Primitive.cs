@@ -15,19 +15,19 @@ namespace DYear {
     {
         public Dhr_MakeHourComponent()
             //Call the base constructor
-            : base("Construct Hour", "Dhour", "Constructs a Dhour out of its constituent parts", "DYear", "Primitive") { }
+            : base("Construct Hour", "Dhour", "Constructs a Dhour out of its constituent parts", "Dhour", "Primitive") { }
 
         public override Guid ComponentGuid { get { return new Guid("{39DD748B-79FE-4B9E-9108-32ACF9751688}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_primitive_constructhour; } }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary | GH_Exposure.obscure; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.Register_IntegerParam("Hour Number", "Hr", "The hour of the year to construct, =between 0 and 8759.  Defaults to -1, which produces an invalid Dhour.", -1, GH_ParamAccess.list);
-            pManager.Register_StringParam("Keys", "Keys", "The named keys to store in this Dhour. Must be a list of equal length to the 'Vals' parameter", GH_ParamAccess.list);
-            pManager.Register_DoubleParam("Values", "Vals", "The values to store in this Dhour.  Must be a list of equal length to the 'Keys' parameter", GH_ParamAccess.tree);
-            pManager.Register_ColourParam("Color", "Clr", "Optional.  A color assigned to this hour.  Hours are typically assigned colors during an analysis in preparation for visualization", GH_ParamAccess.list);
-            pManager.Register_PointParam("Posistion", "Pt", "Optional.  A point assigned to this hour. Hours are typically assigned positions during an analysis in preparation for visualization", GH_ParamAccess.list);
+            pManager.Register_IntegerParam("Hour Number", "Hr", "The hour of the year to construct, (0-8759).  Defaults to -1, which produces an invalid Dhour.", -1, GH_ParamAccess.list);
+            pManager.Register_StringParam("Keys", "Keys", "The named keys to store in this Dhour. Must be a list of equal length to the 'Vals' parameter.", GH_ParamAccess.list);
+            pManager.Register_DoubleParam("Values", "Vals", "The values to store in this Dhour.  Must be a list of equal length to the 'Keys' parameter.", GH_ParamAccess.tree);
+            pManager.Register_ColourParam("Color", "Clr", "Optional.  A color assigned to this hour, typically for analysis and visualization.", GH_ParamAccess.list);
+            pManager.Register_PointParam("Position", "Pt", "Optional.  A point in space assigned to this hour, typically for analysis and visualization.", GH_ParamAccess.list);
 
             this.Params.Input[3].Optional = true;
             this.Params.Input[4].Optional = true;
@@ -35,7 +35,7 @@ namespace DYear {
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.RegisterParam(new GHParam_DHr(), "Dhour", "Dhour", "The resulting Dhour.", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhour", "Dhour", "The resulting Dhour", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -83,24 +83,24 @@ namespace DYear {
     {
         public Dhr_DecomposeHourComponent()
             //Call the base constructor
-            : base("Decompose Hour", "Dhour", "Decomposes a Dhour into its constituent parts", "DYear", "Primitive") { }
+            : base("Decompose Hour", "Dhour", "Decomposes a Dhour into its constituent parts", "Dhour", "Primitive") { }
 
         public override Guid ComponentGuid { get { return new Guid("{37481A99-FAF7-45FF-BC37-53F4A0D93481}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_primitive_deconstructhour; } }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary | GH_Exposure.obscure; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.RegisterParam(new GHParam_DHr(), "DHour", "Dhr", "The Dhour to decompose.", GH_ParamAccess.item);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhour", "Dhr", "The Dhour to decompose", GH_ParamAccess.item);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.Register_IntegerParam("Hour Number", "Hr", "The hour of the year represented by this Dhour.", GH_ParamAccess.item);
-            pManager.Register_StringParam("Keys", "Keys", "The keys stored in this Dhour.", GH_ParamAccess.list);
+            pManager.Register_IntegerParam("Hour Number", "Hr", "The hour of the year represented by this Dhour", GH_ParamAccess.item);
+            pManager.Register_StringParam("Keys", "Keys", "The keys stored in this Dhour", GH_ParamAccess.list);
             pManager.Register_DoubleParam("Values", "Vals", "The values stored in this Dhour", GH_ParamAccess.list);
-            pManager.Register_ColourParam("Color", "Clr", "The color assigned to this hour.", GH_ParamAccess.item);
-            pManager.Register_PointParam("Posistion", "Pt", "The point assigned to this hour.", GH_ParamAccess.item);
+            pManager.Register_ColourParam("Color", "Clr", "The color assigned to this hour", GH_ParamAccess.item);
+            pManager.Register_PointParam("Position", "Pt", "The point assigned to this hour", GH_ParamAccess.item);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -121,14 +121,15 @@ namespace DYear {
     public class Dhr_GetValComponent : GH_Component {
         public Dhr_GetValComponent()
             //Call the base constructor
-            : base("Get Value", "GetVal", "Extracts a value from a Dhour", "DYear", "Primitive") { }
+            : base("Get Value", "GetVal", "Extracts a value from a Dhour", "Dhour", "Primitive") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary; } }
         public override Guid ComponentGuid { get { return new Guid("{1DB488D9-7709-423B-BAA3-F8E91E4185B1}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_primitive_getvalue; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
+            pManager.RegisterParam(new GHParam_DHr(), "Dhour", "Dhr", "The Dhour from which to extract a value", GH_ParamAccess.list);
             pManager.Register_StringParam("Value Key", "Key", "The name of the value to extract", GH_ParamAccess.item);
-            pManager.RegisterParam(new GHParam_DHr(), "DHour", "Dhr", "The Dhour from which to extract a value", GH_ParamAccess.list);
+            
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
@@ -139,7 +140,7 @@ namespace DYear {
         protected override void SolveInstance(IGH_DataAccess DA) {
             List<DHr> dhrs = new List<DHr>();
             string key = "";
-            if ((DA.GetData(0, ref key)) && (DA.GetDataList(1, dhrs))) //if it works...
+            if ((DA.GetData(1, ref key)) && (DA.GetDataList(0, dhrs))) //if it works...
             {
                 List<float> vals = new List<float>();
                 float max = dhrs[0].val(key);
@@ -169,13 +170,13 @@ namespace DYear {
     public class Dhr_GetKeysComponent : GH_Component {
         public Dhr_GetKeysComponent()
             //Call the base constructor
-            : base("Get Keys", "GetKeys", "Extracts the Keys from a Dhour or a list of Dhours", "DYear", "Primitive") { }
+            : base("Get Keys", "GetKeys", "Extracts the Keys from a Dhour or a list of Dhours", "Dhour", "Primitive") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary | GH_Exposure.obscure; } }
         public override Guid ComponentGuid { get { return new Guid("{4093D0D1-6533-4196-80E1-FDD4FC880995}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_primitive_getkey; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.RegisterParam(new GHParam_DHr(), "DHours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhours", "Dhrs", "The Dhours from which to extract values", GH_ParamAccess.list);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
@@ -215,14 +216,14 @@ namespace DYear {
     {
         public Dhr_GetColorComponent()
             //Call the base constructor
-            : base("Get Color", "GetColor", "Extracts the color from a Dhour", "DYear", "Primitive") { }
+            : base("Get Color", "GetColor", "Extracts the color from a Dhour", "Dhour", "Primitive") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary | GH_Exposure.obscure; } }
         public override Guid ComponentGuid { get { return new Guid("{3CC6C0C9-D78F-41DE-A924-B3E8C1BEC9FA}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_primitive_getcolor; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.RegisterParam(new GHParam_DHr(), "DHour", "Dhr", "The Dhour from which to extract a color", GH_ParamAccess.item);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhour", "Dhr", "The Dhour from which to extract a color", GH_ParamAccess.item);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
@@ -243,20 +244,20 @@ namespace DYear {
     {
         public Dhr_GetPositionComponent()
             //Call the base constructor
-            : base("Get Position", "GetPos", "Extracts the position from a Dhour", "DYear", "Primitive") { }
+            : base("Get Position", "GetPos", "Extracts the position from a Dhour", "Dhour", "Primitive") { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.secondary | GH_Exposure.obscure; } }
         public override Guid ComponentGuid { get { return new Guid("{0302451B-3C14-4C92-BD58-136C2B787B62}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_primitive_getposition; } }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.RegisterParam(new GHParam_DHr(), "DHour", "Dhr", "The Dhour from which to extract a position", GH_ParamAccess.item);
+            pManager.RegisterParam(new GHParam_DHr(), "Dhour", "Dhr", "The Dhour from which to extract a position", GH_ParamAccess.item);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
 
-            pManager.Register_PointParam("Position", "Pt", "The position of the Dhour", GH_ParamAccess.item);
+            pManager.Register_PointParam("Position", "Pt", "The position of the Dhour point", GH_ParamAccess.item);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)

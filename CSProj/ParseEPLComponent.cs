@@ -36,11 +36,11 @@ namespace DYear
         public ParseEPLComponent() 
         
             //Call the base constructor
-            : base("ParseEPlus", "EPL", "Parses an Energy Plus Output file", "DYear", "Aquire")
+            : base("ParseEPlus", "EPL", "Parses an Energy Plus Output file", "Dhour", "Aquire")
         { }
         public override Grasshopper.Kernel.GH_Exposure Exposure { get { return GH_Exposure.primary; } }
         public override Guid ComponentGuid { get { return new Guid("{ECA812CB-6007-41B5-90EA-A3E19F5CD9AF}"); } }
-        protected override Bitmap Icon { get { return DYear.Properties.Resources.Olgay; } }
+        protected override Bitmap Icon { get { return DYear.Properties.Resources.Icons_aquire_parseEnergyplus; } }
 
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager){ }
